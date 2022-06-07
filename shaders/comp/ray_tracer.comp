@@ -1,0 +1,277 @@
+#version 460 core
+
+layout(local_size_x = 8, local_size_y = 4, local_size_z = 1) in;
+layout(rgba32f, binding = 0) uniform image2D screen;
+
+
+//-----------------------------------------------------
+//----------------STRUCT-DEFINITIONS-------------------
+//-----------------------------------------------------
+struct sphere
+{
+    vec3 center;
+    float radius;
+};
+
+struct camera
+{
+    vec3 origin;
+    vec3 lower_left_corner;
+    vec3 horizontal;
+    vec3 vertical;
+};
+
+struct ray
+{
+    vec3 origin;
+    vec3 direction;
+};
+
+
+struct hit_record
+{
+    vec3 p;
+    vec3 normal;
+    float t;
+    bool front_face;
+};
+//-----------------------------------------------------
+//----------------UNIFORMS-----------------------------
+//-----------------------------------------------------
+uniform int WIDTH;
+uniform int HEIGHT;
+
+uniform int samples_per_pixel;
+uniform int max_depth;
+
+uniform int num_spheres;
+uniform sphere spheres[20];
+
+float aspect_ratio = float(WIDTH) / float(HEIGHT);
+
+//-----------------------------------------------------
+//----------------RNG-CODE-----------------------------
+//-----------------------------------------------------
+// Used as initial seed to the PRNG.
+uint pcg_hash(uint seed)
+{
+  uint state = seed * 747796405u + 2891336453u;
+  uint word = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
+  return (word >> 22u) ^ word;
+}
+
+// Used to advance the PCG state.
+uint rand_pcg(inout uint rng_state)
+{
+  uint state = rng_state;
+  rng_state = rng_state * 747796405u + 2891336453u;
+  uint word = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
+  return (word >> 22u) ^ word;
+}
+
+// Advances the prng state and returns the corresponding random float.
+float rand(inout uint state)
+{
+  uint x = rand_pcg(state);
+  state = x;
+  return float(x)*uintBitsToFloat(0x2f800004u);
+}
+
+vec3 rand_vec3(inout uint seed)
+{
+    return vec3(rand(seed), rand(seed), rand(seed));
+}
+float rand(inout uint seed, float min, float max)
+{
+    return min + (max-min)*rand(seed);
+}
+vec3 rand_vec3(inout uint seed, float min, float max)
+{
+    return vec3(rand(seed, min, max), rand(seed, min, max), rand(seed, min, max));
+}
+vec3 random_in_uint_sphere(inout uint seed)
+{
+    while(true)
+    {
+        vec3 p = rand_vec3(seed, -1, 1);
+        if (length(p) >= 1) continue;
+        return p;
+    }
+}
+vec3 random_unit_vector(inout uint seed)
+{
+    return normalize(random_in_uint_sphere(seed));
+}
+
+
+//-----------------------------------------------------
+//----------------UTILITY-FUNCTIONS--------------------
+//-----------------------------------------------------
+float clamp(float x, float min, float max)
+{
+    if (x < min) return min;
+    if (x > max) return max;
+    return x;
+}
+
+vec3 ray_at(in ray r, float t)
+{
+    return r.origin + r.direction * t;
+}
+
+camera camera_init()
+{
+    camera c;
+    float aspect_ratio = float(WIDTH) / float(HEIGHT);
+    float vpHeight = 2.0;
+    float vpWidth = aspect_ratio * vpHeight;
+    float focal_length = 1.0;
+
+    c.origin = vec3(0, 0, 0);
+    c.horizontal = vec3(vpWidth, 0, 0);
+    c.vertical = vec3(0, vpHeight, 0);
+    c.lower_left_corner = c.origin - c.horizontal/2 - c.vertical/2 - vec3(0, 0, focal_length);
+    return c;
+}
+
+ray camera_get_ray(in camera c, float u, float v)
+{
+    ray r = ray(c.origin, c.lower_left_corner + u*c.horizontal + v*c.vertical - c.origin);
+    return r;
+}
+
+float length2(in vec3 vec)
+{
+    return vec.x * vec.x + vec.y * vec.y + vec.z * vec.z;
+}
+
+void hit_record_set_face_normal(inout hit_record rec, in ray r, in vec3 outward_normal)
+{
+    rec.front_face = dot(r.direction, outward_normal) < 0;
+    if (rec.front_face)
+    {
+        rec.normal = outward_normal;
+    }
+    else
+    {
+        rec.normal = -outward_normal;
+    }
+}
+//-----------------------------------------------------
+//----------------SPHERE-INTERSECTION------------------
+//-----------------------------------------------------
+bool sphere_hit(in ray r, in sphere s, float t_min, float t_max, inout hit_record rec)
+{
+    vec3 oc = r.origin - s.center;
+    float a = length2(r.direction);
+    float half_b = dot(oc, r.direction);
+    float c = length2(oc) - s.radius * s.radius;
+
+    float discriminant = (half_b * half_b) - (a*c);
+    if (discriminant < 0) return false;
+    float sqrt_dis = sqrt(discriminant);
+    float root = (-half_b - sqrt_dis) / a;
+    if (root < t_min || t_max < root)
+    {
+        root = (-half_b + sqrt_dis) / a;
+        if (root < t_min || t_max < root)
+        {
+            return false;
+        }
+    }
+    rec.t = root;
+    rec.p = ray_at(r, root);
+    vec3 outward_normal = (rec.p - s.center) / s.radius;
+    hit_record_set_face_normal(rec, r, outward_normal);
+    return true;
+}
+
+bool hit(in ray r, float t_min, float t_max, inout hit_record rec)
+{
+    hit_record temp_rec;
+    bool hit_anything = false;
+    float closest_so_far = t_max;
+    for (int i=0; i<num_spheres; i++)
+    {
+        sphere s = spheres[i];
+        if (sphere_hit(r, s, t_min, closest_so_far, temp_rec))
+        {
+            hit_anything = true;
+            closest_so_far = temp_rec.t;
+            rec = temp_rec;
+        }
+    }
+    return hit_anything;
+}
+
+vec3 ray_color(inout uint seed, in ray r, int depth)
+{
+    const float EPSILON = 0.001;
+    vec3 bcol = vec3(1);
+    ray r_in = r;
+    while (true)
+    {
+        if (depth <= 0) 
+        {
+            return vec3(0, 0, 0);
+        }
+        hit_record rec;
+        if (hit(r_in, 0.00000001, 10000000, rec))
+        {
+            // vec3 target = rec.p + rec.normal + random_unit_vector(seed);
+            vec3 target = rec.p + rec.normal + random_in_uint_sphere(seed);
+            r_in = ray(rec.p, target - rec.p);
+            // r_in.origin = r_in.origin + r_in.direction * EPSILON;
+            r_in.origin += rec.normal * EPSILON;
+            depth--;
+            bcol *= 0.5;
+        }
+        else
+        {
+            vec3 dir = normalize(r_in.direction);
+            float t = 0.5 * (dir.y + 1);
+            bcol *= vec3(1 - t) + t * vec3(.5, .7, 1);
+            return bcol;
+        }
+    }
+    vec3 unit_dir = normalize(r.direction);
+    float t = 0.5 * (unit_dir.y + 1); 
+    return (1 - t) * vec3(1, 1, 1) + t * vec3(.5, .7, 1); 
+}
+
+void main()
+{
+    vec4 pixel = vec4(1, 0, 1, 1);
+    vec2 pixel_coords = vec2(gl_GlobalInvocationID.xy);
+
+    camera c = camera_init();
+
+    ivec2 dims = imageSize(screen);
+    float u = pixel_coords.x / (dims.x);  
+    float v = pixel_coords.y / (dims.y);
+
+    uint pixel_index = uint(pixel_coords.x + pixel_coords.y * WIDTH);
+    uint seed = pcg_hash(pixel_index);
+
+    vec3 pix_col = vec3(0, 0, 0);
+    for (int i=0; i<samples_per_pixel; i++)
+    {
+        float new_u = u + (rand(seed) / (dims.x));
+        float new_v = v + (rand(seed) / (dims.y));
+        ray r = camera_get_ray(c, new_u, new_v);    
+        pix_col += ray_color(seed, r, max_depth);
+    }
+    
+    float scale = 1.0 / samples_per_pixel;
+    pix_col.x = sqrt(pix_col.x * scale);
+    pix_col.y = sqrt(pix_col.y * scale);
+    pix_col.z = sqrt(pix_col.z * scale);
+
+    pix_col.x = clamp(pix_col.x, 0, 1);
+    pix_col.y = clamp(pix_col.y, 0, 1);
+    pix_col.z = clamp(pix_col.z, 0, 1);
+    pixel = vec4(pix_col, 1);
+    // pixel = vec4(rand(seed), rand(seed), rand(seed), 1);
+
+    imageStore(screen, ivec2(pixel_coords), pixel);
+}

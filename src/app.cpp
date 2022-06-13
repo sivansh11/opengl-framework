@@ -30,7 +30,7 @@ void App::run()
         0.5f, -0.5f, 0.0f,
         0.0f,  0.5f, 0.0f
     }; 
-
+    
     gfx::ShaderProgram hello_shader;
     hello_shader.attachShader("../shaders/vert/hello_triangle.vert");
     hello_shader.attachShader("../shaders/frag/hello_triangle.frag");

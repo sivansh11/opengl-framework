@@ -28,12 +28,13 @@ namespace gfx
     {
     public:
         Texture2D(const char *imgPath);
+        Texture2D(int width, int height, void* data, GLuint format);
         ~Texture2D();
         void init(int width, int height, void* data, GLuint format);
         void remove();
         void bind(int uint_);
         void unBind(int uint_);
-        
+
         int width, height;
 
     private:

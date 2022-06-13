@@ -12,6 +12,9 @@ namespace gfx
     {
         glCall(glDeleteBuffers(1, &id));
     }
+    /*
+        size is in bytes
+    */
     void VertexBuffer::load(float* verticies, size_t size)
     {
         ASSERT(id == 0, "buffer already in use");

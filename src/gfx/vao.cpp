@@ -4,24 +4,25 @@ namespace gfx
 {
     VertexArray::VertexArray()
     {
-        glGenVertexArrays(1, &id);
+        glCall(glGenVertexArrays(1, &id));
     }
     VertexArray::~VertexArray()
     {
-        glDeleteVertexArrays(1, &id);
+        glCall(glDeleteVertexArrays(1, &id));
     }
     void VertexArray::bind()
     {
-        glBindVertexArray(id);
+        glCall(glBindVertexArray(id));
     }
     void VertexArray::unBind()
     {
-        glBindVertexArray(0);
+        glCall(glBindVertexArray(0));
     }
     void VertexArray::linkVertexBuffer(GLuint layout, unsigned int size, GLenum type, GLenum normalize, unsigned int stride, void * offset)
     {
-        glVertexAttribPointer(layout, size, type, normalize, stride, offset);
-        glEnableVertexAttribArray(layout);
+        bind();
+        glCall(glVertexAttribPointer(layout, size, type, normalize, stride, offset));
+        glCall(glEnableVertexAttribArray(layout));
     }
 } // namespace gfx
 

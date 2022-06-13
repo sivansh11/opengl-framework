@@ -27,10 +27,11 @@ App::~App()
 void App::run()
 {
     float vertices[] = {
-        0.5f,  0.5f, 0.0f,  // top right
-        0.5f, -0.5f, 0.0f,  // bottom right
-        -0.5f, -0.5f, 0.0f,  // bottom left
-        -0.5f,  0.5f, 0.0f   // top left 
+        // positions          // colors           // texture coords
+        0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
+        0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
+        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
+        -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
     };
     unsigned int indices[] = {  // note that we start from 0!
         0, 1, 3,   // first triangle
@@ -38,8 +39,8 @@ void App::run()
     }; 
 
     gfx::ShaderProgram hello_shader;
-    hello_shader.attachShader("../shaders/vert/hello_triangle.vert");
-    hello_shader.attachShader("../shaders/frag/hello_triangle.frag");
+    hello_shader.attachShader("../shaders/vert/texture_example.vert");
+    hello_shader.attachShader("../shaders/frag/texture_example.frag");
     hello_shader.link();
 
     gfx::ElementBuffer ebo;
@@ -47,7 +48,11 @@ void App::run()
     gfx::VertexArray vao;
     ebo.load(indices, sizeof(indices));
     vbo.load(vertices, sizeof(vertices));
-    vao.linkVertexBuffer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    vao.linkVertexBuffer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    vao.linkVertexBuffer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+    vao.linkVertexBuffer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+
+    gfx::Texture2D tex("../textures/tex1.jpg");
 
     while (!window.shouldClose())
     {
@@ -57,6 +62,7 @@ void App::run()
         glCall(glClear(GL_COLOR_BUFFER_BIT));
 
         hello_shader.bind();
+        tex.bind(0);
         ebo.bind();
         glCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
 

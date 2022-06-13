@@ -1,6 +1,7 @@
 #include "app.h"
 
 #include "imgui_setup.h"
+#include "gfx/texture.h"
 #include "gfx/shader.h"
 #include "gfx/model.h"
 

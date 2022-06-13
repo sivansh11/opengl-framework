@@ -10,6 +10,7 @@ add_subdirectory(deps/glm)
 add_subdirectory(deps/glad)
 add_subdirectory(deps/glfw)
 add_subdirectory(deps/imgui)
+add_subdirectory(deps/stb_image)
 
 add_executable(${PROJECT_NAME} ${SRC_FILES})
 
@@ -22,6 +23,7 @@ target_link_libraries(${PROJECT_NAME}
     glad
     glfw
     imgui
+    stb_image
     pthread
     stdc++fs
 )

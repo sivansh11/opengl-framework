@@ -45,6 +45,18 @@ namespace gfx
         glCall(glBindTextureUnit(uint_, 0));
     }
 
+    Texture2D::Texture2D(const char *imgPath)
+    {
+
+    }
+    Texture2D::~Texture2D()
+    {
+
+    }
+    void Texture2D::init(int width, int height, void* data)
+    {
+        
+    }
 
 } // namespace gfx
 

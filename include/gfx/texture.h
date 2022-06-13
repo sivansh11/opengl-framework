@@ -5,7 +5,8 @@
 
 #include <glad/glad.h>
 
-namespace gfx{
+namespace gfx
+{
     class TextureStorage2D
     {
     public:
@@ -16,6 +17,19 @@ namespace gfx{
         void bind(int uint_);
         void unBind(int uint_);
         // GLuint getHandle();
+
+        int width, height;
+
+    private:
+        GLuint id{};
+    };
+
+    class Texture2D
+    {
+    public:
+        Texture2D(const char *imgPath);
+        ~Texture2D();
+        void init(int width, int height, void* data);
 
         int width, height;
 

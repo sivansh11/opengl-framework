@@ -29,10 +29,14 @@ void App::run()
     {
         window.startFrame();
 
-        glClearColor(0, 0, 0, 1);
+        glClearColor(0.1, 0.1, 0.1, 1);
         glClear(GL_COLOR_BUFFER_BIT);
 
         myImGuiStartFrame();
+
+        ImGui::Begin("test");
+        ImGui::Text("testing");
+        ImGui::End();
 
         myImGuiEndFrame();
 

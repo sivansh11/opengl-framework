@@ -26,18 +26,25 @@ App::~App()
 void App::run()
 {
     float vertices[] = {
-        -0.5f, -0.5f, 0.0f,
-        0.5f, -0.5f, 0.0f,
-        0.0f,  0.5f, 0.0f
+        0.5f,  0.5f, 0.0f,  // top right
+        0.5f, -0.5f, 0.0f,  // bottom right
+        -0.5f, -0.5f, 0.0f,  // bottom left
+        -0.5f,  0.5f, 0.0f   // top left 
+    };
+    unsigned int indices[] = {  // note that we start from 0!
+        0, 1, 3,   // first triangle
+        1, 2, 3    // second triangle
     }; 
-    
+
     gfx::ShaderProgram hello_shader;
     hello_shader.attachShader("../shaders/vert/hello_triangle.vert");
     hello_shader.attachShader("../shaders/frag/hello_triangle.frag");
     hello_shader.link();
 
+    gfx::ElementBuffer ebo;
     gfx::VertexBuffer vbo;
     gfx::VertexArray vao;
+    ebo.load(indices, sizeof(indices));
     vbo.load(vertices, sizeof(vertices));
     vao.linkVertexBuffer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 
@@ -49,8 +56,8 @@ void App::run()
         glCall(glClear(GL_COLOR_BUFFER_BIT));
 
         hello_shader.bind();
-        vao.bind();
-        glCall(glDrawArrays(GL_TRIANGLES, 0, 3));
+        ebo.bind();
+        glCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
 
         myImGuiStartFrame();
 

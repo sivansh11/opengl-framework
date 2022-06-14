@@ -7,7 +7,8 @@
                 "${workspaceFolder}/deps/glad/include",
                 "${workspaceFolder}/deps/glad/include",
                 "${workspaceFolder}/include",
-                "${workspaceFolder}/include/gfx"
+                "${workspaceFolder}/include/gfx",
+                "${workspaceFolder}/deps/glfw/include"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

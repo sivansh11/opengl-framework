@@ -3,6 +3,8 @@
 
 #include "core.h"
 
+#include <random>
+
 enum FileType
 {
     TEXT,
@@ -19,5 +21,28 @@ void hashCombine(std::size_t& seed, const T& v, const Rest&... rest) {
   seed ^= std::hash<T>{}(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
   (hashCombine(seed, rest), ...);
 };
+
+struct Random
+{
+    void init(uint32_t seed)
+    {
+        randomNumberGenerator.seed(seed);
+    }
+
+    float randFloat()
+    {
+        return distribution(randomNumberGenerator);
+    }
+
+    inline float randFloat(float min, float max)
+    {
+        return min + (max-min)*randFloat();
+    }
+
+private:
+    std::mt19937 randomNumberGenerator;
+    std::uniform_real_distribution<float> distribution {0.f, 1.f};
+};
+
 
 #endif

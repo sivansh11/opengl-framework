@@ -41,6 +41,8 @@ namespace gfx
         void vecf(const char* uniformName, float value);
         void veci(const char* uniformName, int value);
 
+        GLuint getHandle() { return id; }
+
     private:
         void printProgramInfoLog();
         std::vector<Shader> shaders;

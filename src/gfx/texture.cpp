@@ -44,6 +44,7 @@ namespace gfx
     {
         glCall(glBindTextureUnit(uint_, 0));
     }
+    
     Texture2D::Texture2D(int width, int height, void* data, GLuint format)
     {
         init(width, height, data, format);

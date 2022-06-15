@@ -59,15 +59,16 @@ void App::run()
     vao.linkVertexBuffer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));    
 
     gfx::TextureStorage2D screen(500, 500);
-
+    
     gfx::ShaderStorage shaderStorage;
+
     struct Data
     {
         glm::vec4 pix_val[500 * 500];
     }data;
     for (int i=0; i<500; i++) for (int j=0; j<500; j++)
     {
-        data.pix_val[j * 500 + i].x = 1;
+        data.pix_val[j * 500 + i].x = 0;
         data.pix_val[j * 500 + i].y = 1;
         data.pix_val[j * 500 + i].z = 1;
         data.pix_val[j * 500 + i].a = 1;
@@ -88,7 +89,7 @@ void App::run()
         test.bind();
         screen.bind(0);
         test.veci("screen", 0);
-        shaderStorage.bind(test, 0, "data");
+        shaderStorage.bind(0);
         test.dispatchCompute(glm::ceil(float(width) / 8), glm::ceil(float(height) / 4), 1);
 
         hello_shader.bind();

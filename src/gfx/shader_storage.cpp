@@ -12,11 +12,11 @@ ShaderStorage::ShaderStorage()
 void ShaderStorage::init(void* data, size_t dataSize)
 {
     glCall(glBindBuffer(GL_SHADER_STORAGE_BUFFER, id));
-    glCall(glBufferData(GL_SHADER_STORAGE_BUFFER, dataSize, data, GL_DYNAMIC_COPY));
+    glCall(glBufferData(GL_SHADER_STORAGE_BUFFER, dataSize, data, GL_DYNAMIC_DRAW));
     unBind();
 }
 
-void ShaderStorage::update(void* data, size_t dataSize)
+void ShaderStorage::update_gpu(void* data, size_t dataSize)
 {
     glCall(glBindBuffer(GL_SHADER_STORAGE_BUFFER, id));
     void* p = glCall(glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY));
@@ -25,11 +25,18 @@ void ShaderStorage::update(void* data, size_t dataSize)
     unBind();
 }
 
-void ShaderStorage::bind(gfx::ShaderProgram &program, int binding, const char* name)
+void ShaderStorage::update_cpu(void* data, size_t dataSize)
 {
     glCall(glBindBuffer(GL_SHADER_STORAGE_BUFFER, id));
-    GLuint blockIndex = glCall(glGetProgramResourceIndex(program.getHandle(), GL_SHADER_STORAGE_BLOCK, name));
-    glCall(glShaderStorageBlockBinding(program.getHandle(), blockIndex, binding));
+    void* p = glCall(glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY));
+    memcpy(data, p, dataSize);
+    glCall(glUnmapBuffer(GL_SHADER_STORAGE_BUFFER));
+    unBind();
+}
+
+void ShaderStorage::bind(int binding)
+{
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, binding, id);
 }
 void ShaderStorage::unBind()
 {

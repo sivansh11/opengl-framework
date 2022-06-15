@@ -3,8 +3,6 @@
 
 #include "core.h"
 
-#include "gfx/shader.h"
-
 #include <glad/glad.h>
 
 namespace gfx
@@ -16,9 +14,10 @@ public:
     ShaderStorage();
 
     void init(void* data, size_t dataSize);
-    void update(void* data, size_t dataSize);
+    void update_gpu(void* data, size_t dataSize);
+    void update_cpu(void* data, size_t dataSize);
 
-    void bind(gfx::ShaderProgram &program, int binding, const char* name);
+    void bind(int binding);
     void unBind();
 
 private:

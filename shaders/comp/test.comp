@@ -13,6 +13,7 @@ void main()
 {
     ivec2 pixel_coords = ivec2(gl_GlobalInvocationID.xy);
     vec4 pixel = pix_val[pixel_coords.y * 500 + pixel_coords.x];
+    // vec4 pixel = vec4(1,1,1,1);
 
     imageStore(screen, pixel_coords, pixel);
 }

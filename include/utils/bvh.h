@@ -108,6 +108,11 @@ namespace bvh
             Primitive::boundingBox(primitive, box.min, box.max);
             return intersect(box, primitive, rootNodeID);
         }
+        std::vector<Primitive>& getPrimitives() { return primitives; }
+        std::vector<uint>& getPrimitiveIDs() { return primitiveIDs; }
+        std::vector<BvhNode>& getBvhNodes() { return bvhNodes; }
+        uint getRootNodeID() { return rootNodeID; }
+        uint getNodesUsed() { return nodesUsed; }
     private:
         template <typename PayLoad>
         void intersect(Ray<PayLoad> &ray, const uint nodeID)

@@ -30,6 +30,38 @@ App::~App()
     myImGuiBye();
 }
 
+struct PayLoad
+{
+    /* data */
+};
+
+
+struct Box
+{
+    Box(vec3 min, vec3 max) : box{min, max} {}
+    bvh::BoundingBox box;
+
+    static void intersect(Box &box, bvh::Ray<PayLoad> &ray)
+    {
+        float intersect = box.box.intersect(ray);
+        if (intersect < ray.t)
+        {
+            ray.t = intersect;
+        }
+    }
+
+    static void boundingBox(Box &box, vec3 &min, vec3 &max)
+    {
+        min = box.box.min;
+        max = box.box.max;
+    }
+
+    static vec3 centroid(Box &box)
+    {
+        return (box.box.min + box.box.max) / 2.0f;
+    }
+};
+
 void App::run()
 {
     float vertices[] = {
@@ -58,26 +90,36 @@ void App::run()
     vao.linkVertexBuffer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
     vao.linkVertexBuffer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));    
 
+    std::vector<Box> boxes{
+        Box{vec3{-1, -1, 5}, vec3{1, 1, 7}}
+    };
+
+    bvh::BVH<Box> bvh;
+    bvh.BVH_BIN_builder(boxes);
+
     gfx::TextureStorage2D screen(500, 500);
     
-    gfx::ShaderStorage shaderStorage;
+    gfx::ShaderProgram raytracer_with_bvh{};
+    raytracer_with_bvh.attachShader("../shaders/comp/raytracer_with_bvh.comp");
+    raytracer_with_bvh.link();
 
-    struct Data
-    {
-        glm::vec4 pix_val[500 * 500];
-    }data;
-    for (int i=0; i<500; i++) for (int j=0; j<500; j++)
-    {
-        data.pix_val[j * 500 + i].x = 0;
-        data.pix_val[j * 500 + i].y = 1;
-        data.pix_val[j * 500 + i].z = 1;
-        data.pix_val[j * 500 + i].a = 1;
-    }
-    shaderStorage.init(&data, sizeof(data));
+    gfx::ShaderStorage primitives;
+    primitives.init(bvh.getPrimitives().data(), bvh.getPrimitives().size() * sizeof(Box));
 
-    gfx::ShaderProgram test{};
-    test.attachShader("../shaders/comp/test.comp");
-    test.link();
+    gfx::ShaderStorage primitiveID;
+    primitiveID.init(bvh.getPrimitiveIDs().data(), bvh.getPrimitiveIDs().size() * sizeof(uint));
+    
+    gfx::ShaderStorage bvhNodes;
+    bvhNodes.init(bvh.getBvhNodes().data(), bvh.getBvhNodes().size() * sizeof(bvh::BvhNode));
+    
+    struct MetaData
+    {
+        uint rootNodeID;
+        uint nodesUsed;
+    } data{bvh.getRootNodeID(), bvh.getNodesUsed()};
+
+    gfx::ShaderStorage metaData;
+    metaData.init(&data, sizeof(MetaData));
 
     while (!window.shouldClose())
     {
@@ -86,11 +128,20 @@ void App::run()
         glClearColor(.1, .1, .1, 1);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        test.bind();
+        // test.bind();
+        // screen.bind(0);
+        // test.veci("screen", 0);
+        // shaderStorage.bind(0);
+        // test.dispatchCompute(glm::ceil(float(width) / 8), glm::ceil(float(height) / 4), 1);
+
+        raytracer_with_bvh.bind();
         screen.bind(0);
-        test.veci("screen", 0);
-        shaderStorage.bind(0);
-        test.dispatchCompute(glm::ceil(float(width) / 8), glm::ceil(float(height) / 4), 1);
+        raytracer_with_bvh.veci("screen", 0);
+        primitives.bind(0);
+        primitiveID.bind(1);
+        bvhNodes.bind(2);
+        metaData.bind(3);
+        raytracer_with_bvh.dispatchCompute(glm::ceil(float(500) / 8), glm::ceil(float(500) / 4), 1);
 
         hello_shader.bind();
         vao.bind();

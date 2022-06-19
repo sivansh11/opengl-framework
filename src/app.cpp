@@ -49,7 +49,7 @@ void App::run()
 
     auto obj = scene.newEntity();    
     scene.assign<gfx::Mesh>(obj).loadModelFromPath("../assets/flat_vase.obj");
-    scene.assign<Transform>(obj).translation = {0, 0, 10};
+    scene.assign<Transform>(obj).translation = {0, 0, 3};
 
     while (!window.shouldClose())
     {

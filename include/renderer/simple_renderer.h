@@ -4,6 +4,7 @@
 #include "utils/camera.h"
 #include "utils/components.h"
 #include "utils/ecs.h"
+#include "utils/filewatcher.h"
 
 #include "gfx/shader.h"
 
@@ -12,13 +13,28 @@ class SimpleRenderer
 public:
     SimpleRenderer()
     {
-        shaderProgram.attachShader("../shaders/vert/simple_shader_with_camera.vert");
-        shaderProgram.attachShader("../shaders/frag/simple_shader_with_camera.frag");
+        shaderProgram.attachShader("../shaders/vert/simple_renderer.vert");
+        shaderProgram.attachShader("../shaders/frag/simple_renderer.frag");
         shaderProgram.link();
+        fileWatchers.push_back(FileWatcher{"../shaders/vert/simple_renderer.vert"});
+        fileWatchers.push_back(FileWatcher{"../shaders/frag/simple_renderer.frag"});
     }
 
     void render(ecs::Scene &scene, ecs::EntityID &camera_)
     {
+        bool reloadShader{false};
+        for (auto& fileWatcher: fileWatchers)
+        {
+            if (fileWatcher.hasChanged())
+            {
+                reloadShader = true;
+            }
+        }
+        if (reloadShader)
+        {
+            std::cout << "reloaded shader!\n";
+            shaderProgram.reload();
+        }
         Camera &camera = scene.get<Camera>(camera_);
         static glm::mat4 proj{};
         proj = camera.getProjection(); 
@@ -42,6 +58,7 @@ public:
 
 private:
     gfx::ShaderProgram shaderProgram{};
+    std::vector<FileWatcher> fileWatchers;
 };
 
 

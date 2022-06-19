@@ -13,6 +13,8 @@
 #include "utils/controller.h"
 #include "utils/utils.h"
 
+#include "renderer/simple_renderer.h"
+
 App::App() : window(width, height, title.c_str())
 {
     myImGuiSetup(window);
@@ -31,68 +33,23 @@ App::~App()
     myImGuiBye();
 }
 
-struct PayLoad
-{
-    /* data */
-};
-
-
-struct Box
-{
-    Box(vec3 min, vec3 max) : box{min, max} {}
-    bvh::BoundingBox box;
-
-    static void intersect(Box &box, bvh::Ray<PayLoad> &ray)
-    {
-        float intersect = box.box.intersect(ray);
-        if (intersect < ray.t)
-        {
-            ray.t = intersect;
-        }
-    }
-
-    static void boundingBox(Box &box, vec3 &min, vec3 &max)
-    {
-        min = box.box.min;
-        max = box.box.max;
-    }
-
-    static vec3 centroid(Box &box)
-    {
-        return (box.box.min + box.box.max) / 2.0f;
-    }
-};
-
 void App::run()
 {
-    float vertices[] = {
-        // positions          // colors           // texture coords
-         0.5f,   0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
-         0.5f,  -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
-        -0.5f,  -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
-        -0.5f,   0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
-    };
-    unsigned int indices[] = {  // note that we start from 0!
-        0, 1, 3,   // first triangle
-        1, 2, 3    // second triangle
-    }; 
+    ecs::Scene scene;
 
-    Camera camera;
-    camera.setPerspectiveProjection(90.0f, 1.0f, .01f, 100.0f);
+    auto camera = scene.newEntity();
+    scene.assign<Camera>(camera).setPerspectiveProjection(90.0f, 1.0f, .01f, 100.0f);
     KeyboardMovementController controller;
+    scene.assign<Transform>(camera);
 
-    glm::vec3 transform{0};
-    glm::vec3 rotate{0};
-
-    gfx::ShaderProgram program{};
-    program.attachShader("../shaders/vert/simple_shader_with_camera.vert");
-    program.attachShader("../shaders/frag/simple_shader_with_camera.frag");
-    program.link();
+    SimpleRenderer renderer;
 
     gfx::Mesh mesh{};
-    mesh.loadModelFromPath("../assets/colored_cube.obj");
+    mesh.loadModelFromPath("../assets/flat_vase.obj");
 
-    glEnable(GL_DEPTH_TEST);  
+    auto obj = scene.newEntity();    
+    scene.assign<gfx::Mesh>(obj).loadModelFromPath("../assets/flat_vase.obj");
+    scene.assign<Transform>(obj).translation = {0, 0, 10};
 
     while (!window.shouldClose())
     {
@@ -100,25 +57,20 @@ void App::run()
 
         glClearColor(.1, .1, .1, 1);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_DEPTH_TEST);  
 
-        controller.moveInPlaneXZ(window.getGLFWwindow(), 0.01, transform, rotate);
-        camera.setViewYXZ(transform, rotate);
+        auto& transform = scene.get<Transform>(camera);
 
-        glm::mat4 proj = camera.getProjection();
-        glm::mat4 view = camera.getView();
+        controller.moveInPlaneXZ(window.getGLFWwindow(), 0.01, transform.translation, transform.rotation);
+        auto& cam = scene.get<Camera>(camera); 
+        cam.setViewYXZ(transform.translation, transform.rotation);
 
-        program.bind();
-        program.Mat4f("proj", glm::value_ptr(proj));
-        program.Mat4f("view", glm::value_ptr(view));
-        mesh.bind();
-        mesh.draw();
+        renderer.render(scene, camera);
 
         myImGuiStartFrame();
 
         ImGui::Begin("info");
         ImGui::Text("%.2f fps", ImGui::GetIO().Framerate);
-        ImGui::Text("%.2f %.2f %.2f", transform.x, transform.y, transform.z);
-        ImGui::Text("%.2f %.2f %.2f", rotate.x, rotate.y, rotate.z);
         ImGui::End();
 
         myImGuiEndFrame();

@@ -1,7 +1,8 @@
-#ifndef HORIZON_ECS_H
-#define HORIZON_ECS_H
+#ifndef ECS_H
+#define ECS_H
 
 #include "core.h"
+
 
 namespace ecs
 {
@@ -27,6 +28,7 @@ class BaseComponentPool
 public:
     virtual void* get(size_t index) = 0;
     virtual void* construct(size_t index) = 0;
+    virtual void destroy(size_t index) = 0;
 private:
 
 };
@@ -51,6 +53,10 @@ public:
     void* construct(size_t index) override
     {
         return new (get(index)) T();
+    }
+    void destroy(size_t index) override
+    {
+        ((T*)(get(index)))->~T();
     }
 private:
     char* p_data{nullptr};
@@ -95,6 +101,11 @@ public:
     void deleteEntity(const EntityID entityID)
     {
         ASSERT(entities[entityID].isValid == true, "cannot delete already deleted entity");
+        for (int componentID=0; componentID<MAX_COMPONENTS; componentID++)
+        {
+            if (!entities[entityID].mask.test(componentID)) continue;
+            componentPools[componentID]->destroy(entityID);
+        }
         entities[entityID].isValid = false;
         entities[entityID].mask.reset();
         availableIDs.push(entityID);
@@ -122,7 +133,9 @@ public:
         ComponentID componentID = getComponentID<T>();
         ASSERT(isValid(entityID) == true, "entity does not exist");
         ASSERT(entities[entityID].mask.test(componentID) == true, "cannot remove component from entity which doesnt contain it in the first place");
+        componentPools[componentID]->destroy(entityID);
         entities[entityID].mask.reset(componentID);
+        entities[entityID].isValid = false;
     }
     template <typename T>
     bool has(EntityID entityID)
@@ -143,8 +156,8 @@ public:
         ASSERT(entities.size() > entityID, "entity doesnt exist");
         return entities[entityID].isValid;
     }
-private:
     std::vector<EntityDescription> entities;
+private:
     std::queue<EntityID> availableIDs;
     std::vector<BaseComponentPool*> componentPools;
 
@@ -161,7 +174,7 @@ struct SceneView
         }
         else
         {
-            int componentIDs[] = {getComponentID<ComponentTypes>()...};
+            ComponentID componentIDs[] = {getComponentID<ComponentTypes>()...};
             for (int i = 0; i < sizeof...(ComponentTypes); i++)
             {
                 componentMask.set(componentIDs[i]);
@@ -209,7 +222,7 @@ struct SceneView
     const Iterator begin() const
     {
         EntityID firstIndex = 0;
-        while (firstIndex < scene.entities.size() && (componentMask != (componentMask & scene.entities[firstIndex].mask) || scene.isValid(scene.entities[firstIndex].id)))
+        while (firstIndex < scene.entities.size() && (componentMask != (componentMask & scene.entities[firstIndex].mask) || !scene.isValid(scene.entities[firstIndex].id)))
         {
             firstIndex++;
         } 

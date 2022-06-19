@@ -60,8 +60,11 @@ void Model::loadModelFromPath(const char *filePath)
             vertices[i].color.b = 1;
         }
 
-        vertices[i].uv.x = mesh->mTextureCoords[0][i].x;
-        vertices[i].uv.y = mesh->mTextureCoords[0][i].y;
+        if (mesh->mTextureCoords[0])
+        {
+            vertices[i].uv.x = mesh->mTextureCoords[0][i].x;
+            vertices[i].uv.y = mesh->mTextureCoords[0][i].y;
+        }
     }
 
     indexCount = mesh->mNumFaces * 3;

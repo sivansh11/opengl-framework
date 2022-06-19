@@ -42,11 +42,13 @@ void App::run()
     KeyboardMovementController controller;
     scene.assign<Transform>(camera);
 
-    SimpleRenderer renderer;
+    FrameBufferUsageRenderer renderer{width, height};
 
     auto obj = scene.newEntity();    
-    scene.assign<gfx::Model>(obj).loadModelFromPath("../assets/flat_vase.obj");
-    scene.assign<Transform>(obj).translation = {0, 0, 3};
+    scene.assign<gfx::Model>(obj).loadModelFromPath("../assets/cat.obj");
+    scene.assign<Transform>(obj).translation = {0, 0, 1};
+    scene.get<Transform>(obj).scale = {0.01, 0.01, 0.01};
+    scene.get<Transform>(obj).rotation = {-glm::half_pi<float>(), 0, 0};
 
     while (!window.shouldClose())
     {
@@ -54,7 +56,6 @@ void App::run()
 
         glClearColor(.1, .1, .1, 1);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glEnable(GL_DEPTH_TEST);  
 
         auto& transform = scene.get<Transform>(camera);
 

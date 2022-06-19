@@ -17,6 +17,7 @@ private:
     int width = 800;
     int height = 800;
     Window window;
+    Dispatcher dispatcher;
 };
 
 #endif

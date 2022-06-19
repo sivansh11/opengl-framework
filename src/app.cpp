@@ -4,6 +4,7 @@
 #include "gfx/texture.h"
 #include "gfx/shader.h"
 #include "gfx/model.h"
+#include "gfx/mesh.h"
 #include "gfx/shader_storage.h"
 
 #include "utils/bvh.h"
@@ -76,7 +77,16 @@ void App::run()
         1, 2, 3    // second triangle
     }; 
 
+    Camera camera;
+    
 
+    gfx::ShaderProgram program{};
+    program.attachShader("../shaders/vert/simple_shader.vert");
+    program.attachShader("../shaders/frag/simple_shader.frag");
+    program.link();
+
+    gfx::Mesh mesh{};
+    mesh.loadModelFromPath("../assets/cube.obj");
 
     while (!window.shouldClose())
     {
@@ -85,7 +95,9 @@ void App::run()
         glClearColor(.1, .1, .1, 1);
         glClear(GL_COLOR_BUFFER_BIT);
 
-
+        program.bind();
+        mesh.bind();
+        mesh.draw();
 
         myImGuiStartFrame();
 

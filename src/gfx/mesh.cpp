@@ -47,6 +47,10 @@ void Mesh::loadModelFromPath(const char *filePath)
         vertices[i].normal.y = mesh->mNormals[i].y;
         vertices[i].normal.z = mesh->mNormals[i].z;
 
+        vertices[i].color.r = 1;
+        vertices[i].color.g = 1;
+        vertices[i].color.b = 1;
+
         vertices[i].uv.x = mesh->mTextureCoords[0][i].x;
         vertices[i].uv.y = mesh->mTextureCoords[0][i].y;
     }

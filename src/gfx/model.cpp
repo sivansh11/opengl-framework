@@ -1,5 +1,10 @@
 #include "gfx/model.h"
 
+#include "core.h"
+
+#include <assimp/Importer.hpp>   
+#include <assimp/scene.h>           
+#include <assimp/postprocess.h>     
 
 namespace gfx
 {
@@ -10,50 +15,79 @@ Model::Model()
 }
 Model::~Model()
 {
+
+}
+void Model::loadModelFromPath(const char *filePath)
+{
+    Assimp::Importer importer;
+
+    const aiScene* scene = importer.ReadFile(
+        filePath, 
+        aiProcess_Triangulate
+    );
     
-}
-
-void Model::load(std::vector<Vertex> &vertices, std::vector<uint32_t> &indices)
-{
-    vao.bind();
-    vbo.load((float*)(vertices.data()), sizeof(vertices[0]) * vertices.size());
-    verticesSize = vertices.size();
-
-    if (indices.size() != 0)
-    {   
-        ebo.load((uint32_t*)(indices.data()), sizeof(indices[0]) * indices.size());
-        indicesSize = indices.size();
-    }
-
-    vao.linkVertexBuffer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(offsetof(Vertex, position)));
-    vao.linkVertexBuffer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(offsetof(Vertex, color)));
-    vao.linkVertexBuffer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(offsetof(Vertex, normal)));
-    vao.linkVertexBuffer(3, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(offsetof(Vertex, uv)));
-}
-void Model::draw()
-{
-    bind();
-    if (indicesSize == 0)
+    if (!scene)
     {
-        glCall(glDrawArrays(GL_TRIANGLES, 0, verticesSize));
+        std::cout << importer.GetErrorString() << '\n';
+        ASSERT(false, "");
     }
-    else
-    {
-        glCall(glDrawElements(GL_TRIANGLES, indicesSize, GL_UNSIGNED_INT, 0));
-    }
-}
+    
+    unsigned int meshIndex = scene->mRootNode->mChildren[0]->mMeshes[0];
+    const aiMesh* mesh = scene->mMeshes[meshIndex];
 
-void Model::unBind()
-{
-    vbo.unBind();
-    ebo.unBind();
-    vao.unBind();
+    vertexCount = mesh->mNumVertices;
+    vertices.resize(mesh->mNumVertices);
+    for (unsigned int i = 0; i < mesh->mNumVertices; i++)
+    {
+        vertices[i].position.x = mesh->mVertices[i].x;
+        vertices[i].position.y = mesh->mVertices[i].y;
+        vertices[i].position.z = mesh->mVertices[i].z;
+        
+        vertices[i].normal.x = mesh->mNormals[i].x;
+        vertices[i].normal.y = mesh->mNormals[i].y;
+        vertices[i].normal.z = mesh->mNormals[i].z;
+
+        if (mesh->mColors[0])
+        {
+            vertices[i].color.r = mesh->mColors[0][i].r;
+            vertices[i].color.g = mesh->mColors[0][i].g;
+            vertices[i].color.b = mesh->mColors[0][i].b;
+        }
+        else
+        {
+            vertices[i].color.r = 1;
+            vertices[i].color.g = 1;
+            vertices[i].color.b = 1;
+        }
+
+        vertices[i].uv.x = mesh->mTextureCoords[0][i].x;
+        vertices[i].uv.y = mesh->mTextureCoords[0][i].y;
+    }
+
+    indexCount = mesh->mNumFaces * 3;
+    indices.resize(indexCount);
+    for (unsigned int i = 0; i < mesh->mNumFaces; i++)
+    {
+        unsigned int index = i * 3;
+        indices[index + 0] = mesh->mFaces[i].mIndices[0];
+        indices[index + 1] = mesh->mFaces[i].mIndices[1];
+        indices[index + 2] = mesh->mFaces[i].mIndices[2];
+    }
+    
+    Model::mesh.load(vertices, indices);
 }
 
 void Model::bind()
 {
-    vao.bind();
-    ebo.bind();
+    mesh.bind();
+}
+void Model::unBind()
+{
+    mesh.unBind();
+}
+void Model::draw()
+{
+    mesh.draw();
 }
 
 } // namespace gfx

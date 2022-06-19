@@ -43,16 +43,16 @@ public:
         static glm::mat4 model{1};
         shaderProgram.bind();
 
-        for (auto obj: ecs::SceneView<gfx::Mesh, Transform>(scene))
+        for (auto obj: ecs::SceneView<gfx::Model, Transform>(scene))
         {
-            gfx::Mesh& mesh = scene.get<gfx::Mesh>(obj);
+            gfx::Model& model_ = scene.get<gfx::Model>(obj);
             Transform &transform = scene.get<Transform>(obj);
             model = transform.mat4();
             shaderProgram.Mat4f("proj", glm::value_ptr(proj));
             shaderProgram.Mat4f("view", glm::value_ptr(view));
             shaderProgram.Mat4f("model", glm::value_ptr(model));
-            mesh.bind();
-            mesh.draw();
+            model_.bind();
+            model_.draw();
         }
     }
 

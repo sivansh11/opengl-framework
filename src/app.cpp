@@ -44,11 +44,8 @@ void App::run()
 
     SimpleRenderer renderer;
 
-    gfx::Mesh mesh{};
-    mesh.loadModelFromPath("../assets/flat_vase.obj");
-
     auto obj = scene.newEntity();    
-    scene.assign<gfx::Mesh>(obj).loadModelFromPath("../assets/flat_vase.obj");
+    scene.assign<gfx::Model>(obj).loadModelFromPath("../assets/flat_vase.obj");
     scene.assign<Transform>(obj).translation = {0, 0, 3};
 
     while (!window.shouldClose())

@@ -1,37 +1,66 @@
 #ifndef MESH_H
 #define MESH_H
 
-#include "gfx/vao.h"
-#include "gfx/vbo.h"
-#include "gfx/ebo.h"
+#include "core.h"
 
-#include "gfx/model.h"
+#include "ebo.h"
+#include "vao.h"
+#include "vbo.h"
+
+#include "utils/utils.h"
+
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/hash.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 namespace gfx
 {
-
+    
 class Mesh
 {
 public:
+    struct Vertex
+    {
+        glm::vec3 position;
+        glm::vec3 color;
+        glm::vec3 normal{};
+        glm::vec2 uv{};
+
+        bool operator==(const Vertex &other) const 
+        {
+            return position == other.position &&
+                   color == other.color &&
+                   normal == other.normal &&
+                   uv == other.uv;
+        }
+    };
+
     Mesh();
     ~Mesh();
-    
-    void loadModelFromPath(const char *filePath);
+
+    void load(std::vector<Vertex> &vertices, std::vector<uint32_t> &indices);
     void bind();
     void unBind();
     void draw();
 
 private:
-    unsigned int vertexCount;
-    std::vector<Model::Vertex> vertices;
-    unsigned int indexCount;
-    std::vector<unsigned int> indices;
+    VertexArray vao{};
 
-    Model model;
+    VertexBuffer vbo{};
+    size_t verticesSize = 0;
+
+    ElementBuffer ebo{};
+    size_t indicesSize = 0;
+
+    bool hasIndexBuffer = false;
+
 };
 
 } // namespace gfx
 
 
 #endif
-

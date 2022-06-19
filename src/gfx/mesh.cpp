@@ -1,10 +1,5 @@
 #include "gfx/mesh.h"
 
-#include "core.h"
-
-#include <assimp/Importer.hpp>   
-#include <assimp/scene.h>           
-#include <assimp/postprocess.h>     
 
 namespace gfx
 {
@@ -15,79 +10,50 @@ Mesh::Mesh()
 }
 Mesh::~Mesh()
 {
-
+    
 }
-void Mesh::loadModelFromPath(const char *filePath)
+
+void Mesh::load(std::vector<Vertex> &vertices, std::vector<uint32_t> &indices)
 {
-    Assimp::Importer importer;
+    vao.bind();
+    vbo.load((float*)(vertices.data()), sizeof(vertices[0]) * vertices.size());
+    verticesSize = vertices.size();
 
-    const aiScene* scene = importer.ReadFile(
-        filePath, 
-        aiProcess_Triangulate
-    );
-    
-    if (!scene)
-    {
-        std::cout << importer.GetErrorString() << '\n';
-        ASSERT(false, "");
-    }
-    
-    unsigned int meshIndex = scene->mRootNode->mChildren[0]->mMeshes[0];
-    const aiMesh* mesh = scene->mMeshes[meshIndex];
-
-    vertexCount = mesh->mNumVertices;
-    vertices.resize(mesh->mNumVertices);
-    for (unsigned int i = 0; i < mesh->mNumVertices; i++)
-    {
-        vertices[i].position.x = mesh->mVertices[i].x;
-        vertices[i].position.y = mesh->mVertices[i].y;
-        vertices[i].position.z = mesh->mVertices[i].z;
-        
-        vertices[i].normal.x = mesh->mNormals[i].x;
-        vertices[i].normal.y = mesh->mNormals[i].y;
-        vertices[i].normal.z = mesh->mNormals[i].z;
-
-        if (mesh->mColors[0])
-        {
-            vertices[i].color.r = mesh->mColors[0][i].r;
-            vertices[i].color.g = mesh->mColors[0][i].g;
-            vertices[i].color.b = mesh->mColors[0][i].b;
-        }
-        else
-        {
-            vertices[i].color.r = 1;
-            vertices[i].color.g = 1;
-            vertices[i].color.b = 1;
-        }
-
-        vertices[i].uv.x = mesh->mTextureCoords[0][i].x;
-        vertices[i].uv.y = mesh->mTextureCoords[0][i].y;
+    if (indices.size() != 0)
+    {   
+        ebo.load((uint32_t*)(indices.data()), sizeof(indices[0]) * indices.size());
+        indicesSize = indices.size();
     }
 
-    indexCount = mesh->mNumFaces * 3;
-    indices.resize(indexCount);
-    for (unsigned int i = 0; i < mesh->mNumFaces; i++)
+    vao.linkVertexBuffer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(offsetof(Vertex, position)));
+    vao.linkVertexBuffer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(offsetof(Vertex, color)));
+    vao.linkVertexBuffer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(offsetof(Vertex, normal)));
+    vao.linkVertexBuffer(3, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(offsetof(Vertex, uv)));
+}
+void Mesh::draw()
+{
+    bind();
+    if (indicesSize == 0)
     {
-        unsigned int index = i * 3;
-        indices[index + 0] = mesh->mFaces[i].mIndices[0];
-        indices[index + 1] = mesh->mFaces[i].mIndices[1];
-        indices[index + 2] = mesh->mFaces[i].mIndices[2];
+        glCall(glDrawArrays(GL_TRIANGLES, 0, verticesSize));
     }
-    
-    model.load(vertices, indices);
+    else
+    {
+        glCall(glDrawElements(GL_TRIANGLES, indicesSize, GL_UNSIGNED_INT, 0));
+    }
+}
+
+void Mesh::unBind()
+{
+    vbo.unBind();
+    ebo.unBind();
+    vao.unBind();
 }
 
 void Mesh::bind()
 {
-    model.bind();
-}
-void Mesh::unBind()
-{
-    model.unBind();
-}
-void Mesh::draw()
-{
-    model.draw();
+    vao.bind();
+    ebo.bind();
 }
 
 } // namespace gfx

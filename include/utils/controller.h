@@ -25,7 +25,7 @@ public:
         int lookDown = GLFW_KEY_DOWN;
     };
 
-    void moveInPlaneXZ(GLFWwindow* window, float dt, glm::vec3 &transform_, glm::vec3 rotate_);
+    void moveInPlaneXZ(GLFWwindow* window, float dt, glm::vec3 &transform_, glm::vec3 &rotate_);
 
     KeyMappings keys;
     float moveSpeed{3.f};

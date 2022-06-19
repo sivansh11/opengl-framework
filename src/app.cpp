@@ -78,24 +78,38 @@ void App::run()
     }; 
 
     Camera camera;
-    
+    camera.setPerspectiveProjection(90.0f, 1.0f, .01f, 100.0f);
+    KeyboardMovementController controller;
+
+    glm::vec3 transform{0};
+    glm::vec3 rotate{0};
 
     gfx::ShaderProgram program{};
-    program.attachShader("../shaders/vert/simple_shader.vert");
-    program.attachShader("../shaders/frag/simple_shader.frag");
+    program.attachShader("../shaders/vert/simple_shader_with_camera.vert");
+    program.attachShader("../shaders/frag/simple_shader_with_camera.frag");
     program.link();
 
     gfx::Mesh mesh{};
-    mesh.loadModelFromPath("../assets/cube.obj");
+    mesh.loadModelFromPath("../assets/colored_cube.obj");
+
+    glEnable(GL_DEPTH_TEST);  
 
     while (!window.shouldClose())
     {
         window.startFrame();
 
         glClearColor(.1, .1, .1, 1);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        controller.moveInPlaneXZ(window.getGLFWwindow(), 0.01, transform, rotate);
+        camera.setViewYXZ(transform, rotate);
+
+        glm::mat4 proj = camera.getProjection();
+        glm::mat4 view = camera.getView();
 
         program.bind();
+        program.Mat4f("proj", glm::value_ptr(proj));
+        program.Mat4f("view", glm::value_ptr(view));
         mesh.bind();
         mesh.draw();
 
@@ -103,6 +117,8 @@ void App::run()
 
         ImGui::Begin("info");
         ImGui::Text("%.2f fps", ImGui::GetIO().Framerate);
+        ImGui::Text("%.2f %.2f %.2f", transform.x, transform.y, transform.z);
+        ImGui::Text("%.2f %.2f %.2f", rotate.x, rotate.y, rotate.z);
         ImGui::End();
 
         myImGuiEndFrame();

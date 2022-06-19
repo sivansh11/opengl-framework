@@ -57,6 +57,13 @@
         "typeinfo": "cpp",
         "condition_variable": "cpp",
         "map": "cpp",
-        "mutex": "cpp"
+        "mutex": "cpp",
+        "any": "cpp",
+        "complex": "cpp",
+        "forward_list": "cpp",
+        "list": "cpp",
+        "regex": "cpp",
+        "shared_mutex": "cpp",
+        "variant": "cpp"
     }
 }

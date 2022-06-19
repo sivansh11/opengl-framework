@@ -42,8 +42,6 @@ public:
     ~Model();
 
     void load(std::vector<Vertex> &vertices, std::vector<uint32_t> &indices);
-    void load(std::string &modelPath);
-
     void bind();
     void unBind();
     void draw();

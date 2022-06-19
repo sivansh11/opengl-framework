@@ -11,6 +11,7 @@ add_subdirectory(deps/glad)
 add_subdirectory(deps/glfw)
 add_subdirectory(deps/imgui)
 add_subdirectory(deps/stb_image)
+add_subdirectory(deps/assimp)
 
 add_executable(${PROJECT_NAME} ${SRC_FILES})
 

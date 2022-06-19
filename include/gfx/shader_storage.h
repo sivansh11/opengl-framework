@@ -11,7 +11,7 @@ namespace gfx
 class ShaderStorage
 {
 public:
-    ShaderStorage();
+    ShaderStorage(void* data, size_t dataSize);
 
     void init(void* data, size_t dataSize);
     void update_gpu(void* data, size_t dataSize);

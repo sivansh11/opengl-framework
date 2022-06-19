@@ -4,9 +4,10 @@
 namespace gfx
 {
 
-ShaderStorage::ShaderStorage()
+ShaderStorage::ShaderStorage(void* data, size_t dataSize)
 {
     glCall(glGenBuffers(1, &id));
+    init(data, dataSize);
 }
 
 void ShaderStorage::init(void* data, size_t dataSize)

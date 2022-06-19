@@ -2,18 +2,23 @@
 
 layout(local_size_x = 8, local_size_y = 4, local_size_z = 1) in;
 
-layout(rgba32f, binding = 0) uniform image2D screen;
-
-layout(std430, binding = 0) buffer data
+layout(std430, binding = 0) buffer randomStruct
 {
-    vec4 pix_val[500 * 500];
+    int i;
+    float j;
+    vec3 k;
+};
+
+layout(std430, binding = 1) buffer ret
+{
+    vec3 ret_k;
+    int ret_i;
+    float ret_j;
 };
 
 void main()
 {
-    ivec2 pixel_coords = ivec2(gl_GlobalInvocationID.xy);
-    vec4 pixel = pix_val[pixel_coords.y * 500 + pixel_coords.x];
-    // vec4 pixel = vec4(1,1,1,1);
-
-    imageStore(screen, pixel_coords, pixel);
+    ret_k = k;
+    ret_i = i;
+    ret_j = j;
 }

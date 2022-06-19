@@ -46,3 +46,5 @@ _deps
 *.app
 
 assets/shaders/*.spv
+
+/dumps/

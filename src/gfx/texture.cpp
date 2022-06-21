@@ -45,22 +45,23 @@ namespace gfx
         glCall(glBindTextureUnit(uint_, 0));
     }
     
-    Texture2D::Texture2D(int width, int height, unsigned char* data, GLuint format)
+    Texture2D::Texture2D(int width, int height, unsigned char* data, GLuint format, std::string type)
     {
-        load(width, height, data, format);
+        load(width, height, data, format, type);
     }
-    Texture2D::Texture2D(const char *imgPath)
+    Texture2D::Texture2D(const char *imgPath, std::string type)
     {
-        load(imgPath);
+        load(imgPath, type);
     }
     Texture2D::~Texture2D()
     {
         glCall(glDeleteTextures(1, &id));
     }
-    void Texture2D::load(int width, int height, unsigned char* data, GLuint format)
+    void Texture2D::load(int width, int height, unsigned char* data, GLuint format, std::string type)
     {
         Texture2D::width = width;
         Texture2D::height = height;
+        Texture2D::type = type;
 
         glCall(glGenTextures(1, &id));
         glCall(glBindTexture(GL_TEXTURE_2D, id));
@@ -73,7 +74,7 @@ namespace gfx
         glCall(glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data));
         glCall(glGenerateMipmap(GL_TEXTURE_2D));
     }
-    void Texture2D::load(const char *imgPath)
+    void Texture2D::load(const char *imgPath, std::string type)
     {
         int width, height, nChannels;
         stbi_set_flip_vertically_on_load(true);
@@ -98,19 +99,20 @@ namespace gfx
             RUNTIME_ASSERT(false, "Automatic format detection failed");
             break;
         }   
-        load(width, height, data, format);
+        load(width, height, data, format, type);
         stbi_image_free(data);
     }
     void Texture2D::remove()
     {
         glCall(glDeleteTextures(1, &id));
     } 
-    void Texture2D::bind(int uint_)
+    void Texture2D::bind(int unit)
     {
+        glCall(glActiveTexture(GL_TEXTURE0 + unit));
         glCall(glBindTexture(GL_TEXTURE_2D, id));
     }
-    void Texture2D::unBind(int uint_)
-    {
+    void Texture2D::unBind(int unit)
+    {        
         glCall(glBindTexture(GL_TEXTURE_2D, 0));
     }  
 

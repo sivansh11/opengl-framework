@@ -28,17 +28,18 @@ namespace gfx
     {
     public:
         Texture2D() = default;
-        Texture2D(const char *imgPath);
-        Texture2D(int width, int height, unsigned char* data, GLuint format);
+        Texture2D(const char *imgPath, std::string type);
+        Texture2D(int width, int height, unsigned char* data, GLuint format, std::string type);
         ~Texture2D();
-        void load(const char *imgPath);
-        void load(int width, int height, unsigned char* data, GLuint format);
+        void load(const char *imgPath, std::string type);
+        void load(int width, int height, unsigned char* data, GLuint format, std::string type);
         void remove();
-        void bind(int uint_);
-        void unBind(int uint_);
+        void bind(int unit);
+        void unBind(int unit);
 
         int width, height;
-
+        std::string type;
+        std::string path;
     private:
         GLuint id{};
     };

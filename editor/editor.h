@@ -1,7 +1,7 @@
 #ifndef EDITOR_H
 #define EDITOR_H
 
-#include "lit_model.h"
+#include "new_model_test.h"
 
 #include "imgui_setup.h"
 
@@ -13,6 +13,7 @@
 #include "utils/ecs.h"
 #include "event.h"
 #include "utils/controller.h"
+#include "utils/components.h"
 
 class Editor
 {
@@ -58,7 +59,7 @@ public:
     }
 
 private:
-    example::LitModel renderer;
+    example::NewModelTest renderer;
 
 private:
     ecs::Scene scene;

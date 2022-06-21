@@ -9,7 +9,8 @@
                 "${workspaceFolder}/deps/glm",
                 "${workspaceFolder}/examples",
                 "${workspaceFolder}/deps/glfw/include",
-                "${workspaceFolder}/editor"
+                "${workspaceFolder}/editor",
+                "${workspaceFolder}/deps/assimp/include"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

@@ -1,11 +1,19 @@
 #ifndef MODEL_H
 #define MODEL_H
 
+#include "core.h"
+
 #include "gfx/vao.h"
 #include "gfx/vbo.h"
 #include "gfx/ebo.h"
 
 #include "gfx/mesh.h"
+
+#include "gfx/shader.h"
+
+#include <assimp/Importer.hpp>   
+#include <assimp/scene.h>           
+#include <assimp/postprocess.h>  
 
 namespace gfx
 {
@@ -16,18 +24,20 @@ public:
     Model();
     ~Model();
     
-    void loadModelFromPath(const char *filePath);
+    void loadModelFromPath(std::string filePath);
     void bind();
     void unBind();
-    void draw();
+    void draw(ShaderProgram shader);
 
 private:
-    unsigned int vertexCount;
-    std::vector<Mesh::Vertex> vertices;
-    unsigned int indexCount;
-    std::vector<unsigned int> indices;
+    void processNode(aiNode *node, const aiScene *scene);
+    Mesh processMesh(aiMesh *mesh, const aiScene *scene);
+    std::vector<Texture2D> loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName);
 
-    Mesh mesh;
+private:
+    std::string directory;
+    std::vector<Mesh> meshes;
+    std::vector<Texture2D> texturesLoaded;
 };
 
 } // namespace gfx

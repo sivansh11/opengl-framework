@@ -7,6 +7,9 @@
 #include "vao.h"
 #include "vbo.h"
 
+#include "shader.h"
+#include "texture.h"
+
 #include "utils/utils.h"
 
 #define GLM_FORCE_RADIANS
@@ -26,38 +29,42 @@ public:
     struct Vertex
     {
         glm::vec3 position;
-        glm::vec3 color;
         glm::vec3 normal{};
         glm::vec2 uv{};
 
         bool operator==(const Vertex &other) const 
         {
             return position == other.position &&
-                   color == other.color &&
                    normal == other.normal &&
                    uv == other.uv;
         }
     };
 
     Mesh();
+    Mesh(std::vector<Vertex> &vertices, std::vector<uint32_t> &indices, std::vector<Texture2D> &textures);
     ~Mesh();
 
-    void load(std::vector<Vertex> &vertices, std::vector<uint32_t> &indices);
+    void load(std::vector<Vertex> &vertices, std::vector<uint32_t> &indices, std::vector<Texture2D> &textures);
     void bind();
     void unBind();
-    void draw();
+    void draw(ShaderProgram &shader);
+
+    std::vector<Texture2D> textures;
+    std::vector<Vertex> vertices;
+    std::vector<uint32_t> indices;
+
+private:
+    void setupMesh();
 
 private:
     VertexArray vao{};
-
     VertexBuffer vbo{};
-    size_t verticesSize = 0;
-
     ElementBuffer ebo{};
+
+    size_t verticesSize = 0;
     size_t indicesSize = 0;
 
     bool hasIndexBuffer = false;
-
 };
 
 } // namespace gfx

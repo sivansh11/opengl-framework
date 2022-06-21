@@ -17,83 +17,150 @@ Model::~Model()
 {
 
 }
-void Model::loadModelFromPath(const char *filePath)
+void Model::loadModelFromPath(std::string filePath)
 {
     Assimp::Importer importer;
-
-    const aiScene* scene = importer.ReadFile(
-        filePath, 
+    const aiScene *scene = importer.ReadFile(filePath,
         aiProcess_Triangulate |
+        aiProcess_FlipUVs |
         aiProcess_GenNormals
-    );
-    
-    if (!scene)
-    {
-        std::cout << importer.GetErrorString() << '\n';
-        ASSERT(false, "");
-    }
-    
-    unsigned int meshIndex = scene->mRootNode->mChildren[0]->mMeshes[0];
-    const aiMesh* mesh = scene->mMeshes[meshIndex];
+    );    
 
-    vertexCount = mesh->mNumVertices;
-    vertices.resize(mesh->mNumVertices);
+    if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+    {
+        ASSERT(false, std::string("Assimp Error\n") + importer.GetErrorString());
+    }
+    directory = filePath.substr(0, filePath.find_last_of('/'));
+    processNode(scene->mRootNode, scene);
+    DEBUGMESSAGE((std::to_string(meshes.size()) + " Meshes").c_str());
+}
+
+void Model::processNode(aiNode *node, const aiScene *scene)
+{
+    for (unsigned int i = 0; i < node->mNumMeshes; i++)
+    {
+        aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
+        meshes.push_back(processMesh(mesh, scene));
+    }
+
+    for (unsigned int i = 0; i < node->mNumChildren; i++)
+    {
+        processNode(node->mChildren[i], scene);
+    }
+}
+
+Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
+{
+    std::vector<Mesh::Vertex> vertices;
+    std::vector<unsigned int> indices;
+    std::vector<Texture2D> textures;
+
     for (unsigned int i = 0; i < mesh->mNumVertices; i++)
     {
-        vertices[i].position.x = mesh->mVertices[i].x;
-        vertices[i].position.y = mesh->mVertices[i].y;
-        vertices[i].position.z = mesh->mVertices[i].z;
+        Mesh::Vertex vertex;
+        glm::vec3 vector;
 
+        vector.x = mesh->mVertices[i].x;
+        vector.y = mesh->mVertices[i].y;
+        vector.z = mesh->mVertices[i].z;
+        vertex.position = vector;
 
-        vertices[i].normal.x = mesh->mNormals[i].x;
-        vertices[i].normal.y = mesh->mNormals[i].y;
-        vertices[i].normal.z = mesh->mNormals[i].z;
-        
-
-        if (mesh->mColors[0])
+        if (mesh->HasNormals())
         {
-            vertices[i].color.r = mesh->mColors[0][i].r;
-            vertices[i].color.g = mesh->mColors[0][i].g;
-            vertices[i].color.b = mesh->mColors[0][i].b;
+            vector.x = mesh->mNormals[i].x;
+            vector.y = mesh->mNormals[i].y;
+            vector.z = mesh->mNormals[i].z;
+            vertex.normal = vector;
+        }
+        
+        if (mesh->mTextureCoords[0])
+        {
+            glm::vec2 vec;
+            vec.x = mesh->mTextureCoords[0][i].x;
+            vec.y = mesh->mTextureCoords[0][i].y;
+            vertex.uv = vec;
+
+            // tangent
+
+            // bitangent
         }
         else
         {
-            vertices[i].color.r = 1;
-            vertices[i].color.g = 1;
-            vertices[i].color.b = 1;
+            vertex.uv = glm::vec2(0, 0);
         }
 
-        if (mesh->mTextureCoords[0])
-        {
-            vertices[i].uv.x = mesh->mTextureCoords[0][i].x;
-            vertices[i].uv.y = mesh->mTextureCoords[0][i].y;
-        }
+        vertices.push_back(vertex);
     }
 
-    indexCount = mesh->mNumFaces * 3;
-    indices.resize(indexCount);
     for (unsigned int i = 0; i < mesh->mNumFaces; i++)
     {
-        unsigned int index = i * 3;
-        indices[index + 0] = mesh->mFaces[i].mIndices[0];
-        indices[index + 1] = mesh->mFaces[i].mIndices[1];
-        indices[index + 2] = mesh->mFaces[i].mIndices[2];
+        aiFace face = mesh->mFaces[i];
+        for (unsigned int j = 0; j < face.mNumIndices; j++)
+        {
+            indices.push_back(face.mIndices[j]);
+        }
     }
-    
-    Model::mesh.load(vertices, indices);
+
+    aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
+
+    std::vector<Texture2D> diffMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "diffuse");
+    textures.insert(textures.end(), diffMaps.begin(), diffMaps.end());
+
+    std::vector<Texture2D> specMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "specular");
+    textures.insert(textures.end(), specMaps.begin(), specMaps.end());
+
+    return Mesh(vertices, indices, textures);
+}
+
+std::vector<Texture2D> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName)
+{
+    std::vector<Texture2D> textures;
+    for (unsigned int i = 0; i < mat->GetTextureCount(type); i++)
+    {
+        aiString str;
+        mat->GetTexture(type, i, &str);
+        bool skip = false;
+        for (unsigned int j = 0; j < texturesLoaded.size(); j++)
+        {
+            if (std::strcmp(texturesLoaded[j].path.data(), str.C_Str()) == 0)
+            {
+                textures.push_back(texturesLoaded[j]);
+                skip = true;
+                break;
+            }
+        }
+        if (!skip)
+        {
+            Texture2D texture;
+            texture.load((directory + '/' + str.C_Str()).c_str(), typeName);
+            texture.path = str.C_Str();
+            textures.push_back(texture);
+            texturesLoaded.push_back(texture);
+        }
+    }
+    return textures;
 }
 
 void Model::bind()
 {
-    mesh.bind();
+    for (auto &mesh: meshes)
+    {
+        mesh.bind();
+    }
 }
 void Model::unBind()
 {
-    mesh.unBind();
+    for (auto &mesh: meshes)
+    {
+        mesh.unBind();
+    }
 }
-void Model::draw()
+void Model::draw(ShaderProgram shader)
 {
-    mesh.draw();
+    for (auto &mesh: meshes)
+    {
+        mesh.draw(shader);
+    }
 }
 
 } // namespace gfx

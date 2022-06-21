@@ -7,6 +7,9 @@
 GLenum glCheckError_(const char *file, int line);
 
 #ifndef NDEBUG 
+
+#define DEBUGMESSAGE(x) std::cout << x << '\n'
+
 #define glCheckError() glCheckError_(__FILE__, __LINE__)
 
 #define glCall(x) x; glCheckError()  // macro for error checking for opengl
@@ -46,6 +49,9 @@ GLenum glCheckError_(const char *file, int line);
     } while (false)
 
 #else
+
+#define DEBUGMESSAGE(x) 
+
 #define glCall(x) x;
 
 #define WEAK_ASSERT(condition, message) condition;

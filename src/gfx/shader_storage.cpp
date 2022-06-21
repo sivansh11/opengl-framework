@@ -6,12 +6,12 @@ namespace gfx
 
 ShaderStorage::ShaderStorage(void* data, size_t dataSize)
 {
-    glCall(glGenBuffers(1, &id));
     init(data, dataSize);
 }
 
 void ShaderStorage::init(void* data, size_t dataSize)
 {
+    glCall(glGenBuffers(1, &id));
     glCall(glBindBuffer(GL_SHADER_STORAGE_BUFFER, id));
     glCall(glBufferData(GL_SHADER_STORAGE_BUFFER, dataSize, data, GL_DYNAMIC_DRAW));
     unBind();

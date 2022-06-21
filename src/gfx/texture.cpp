@@ -32,7 +32,7 @@ namespace gfx
         glCall(glBindImageTexture(0, id, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F));
     }
 
-    void TextureStorage2D::remove()
+    void TextureStorage2D::remove() 
     {
         glCall(glDeleteTextures(1, &id));
     }   
@@ -45,16 +45,40 @@ namespace gfx
         glCall(glBindTextureUnit(uint_, 0));
     }
     
-    Texture2D::Texture2D(int width, int height, void* data, GLuint format)
+    Texture2D::Texture2D(int width, int height, unsigned char* data, GLuint format)
     {
-        init(width, height, data, format);
+        load(width, height, data, format);
     }
     Texture2D::Texture2D(const char *imgPath)
+    {
+        load(imgPath);
+    }
+    Texture2D::~Texture2D()
+    {
+        glCall(glDeleteTextures(1, &id));
+    }
+    void Texture2D::load(int width, int height, unsigned char* data, GLuint format)
+    {
+        Texture2D::width = width;
+        Texture2D::height = height;
+
+        glCall(glGenTextures(1, &id));
+        glCall(glBindTexture(GL_TEXTURE_2D, id));
+
+        glCall(glTextureParameteri(id, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR));
+        glCall(glTextureParameteri(id, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+        glCall(glTextureParameteri(id, GL_TEXTURE_WRAP_S, GL_REPEAT));
+        glCall(glTextureParameteri(id, GL_TEXTURE_WRAP_T, GL_REPEAT));
+
+        glCall(glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data));
+        glCall(glGenerateMipmap(GL_TEXTURE_2D));
+    }
+    void Texture2D::load(const char *imgPath)
     {
         int width, height, nChannels;
         stbi_set_flip_vertically_on_load(true);
         unsigned char *data = stbi_load(imgPath, &width, &height, &nChannels, 0);
-        ASSERT(data, "Failed to load texture");
+        ASSERT(data, stbi_failure_reason());
         GLint format;
         switch (nChannels)
         {
@@ -73,29 +97,9 @@ namespace gfx
         default:
             RUNTIME_ASSERT(false, "Automatic format detection failed");
             break;
-        }
-        init(width, height, data, format);
+        }   
+        load(width, height, data, format);
         stbi_image_free(data);
-    }
-    Texture2D::~Texture2D()
-    {
-        glCall(glDeleteTextures(1, &id));
-    }
-    void Texture2D::init(int width, int height, void* data, GLuint format)
-    {
-        Texture2D::width = width;
-        Texture2D::height = height;
-
-        glCall(glGenTextures(1, &id));
-        glCall(glBindTexture(GL_TEXTURE_2D, id));
-
-        glCall(glTextureParameteri(id, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR));
-        glCall(glTextureParameteri(id, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-        glCall(glTextureParameteri(id, GL_TEXTURE_WRAP_S, GL_REPEAT));
-        glCall(glTextureParameteri(id, GL_TEXTURE_WRAP_T, GL_REPEAT));
-
-        glCall(glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data));
-        glCall(glGenerateMipmap(GL_TEXTURE_2D));
     }
     void Texture2D::remove()
     {

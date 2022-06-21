@@ -23,7 +23,8 @@ void Model::loadModelFromPath(const char *filePath)
 
     const aiScene* scene = importer.ReadFile(
         filePath, 
-        aiProcess_Triangulate
+        aiProcess_Triangulate |
+        aiProcess_GenNormals
     );
     
     if (!scene)
@@ -42,10 +43,12 @@ void Model::loadModelFromPath(const char *filePath)
         vertices[i].position.x = mesh->mVertices[i].x;
         vertices[i].position.y = mesh->mVertices[i].y;
         vertices[i].position.z = mesh->mVertices[i].z;
-        
+
+
         vertices[i].normal.x = mesh->mNormals[i].x;
         vertices[i].normal.y = mesh->mNormals[i].y;
         vertices[i].normal.z = mesh->mNormals[i].z;
+        
 
         if (mesh->mColors[0])
         {

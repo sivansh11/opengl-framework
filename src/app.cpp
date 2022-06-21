@@ -1,7 +1,6 @@
 #include "app.h"
 
 #include "imgui_setup.h"
-#include "gfx/texture.h"
 #include "gfx/shader.h"
 #include "gfx/model.h"
 #include "gfx/mesh.h"
@@ -13,7 +12,7 @@
 #include "utils/controller.h"
 #include "utils/utils.h"
 
-#include "renderer/simple_renderer.h"
+#include "examples/basic_texture.h"
 
 App::App() : window(width, height, title.c_str())
 {
@@ -35,20 +34,7 @@ App::~App()
 
 void App::run()
 {
-    ecs::Scene scene;
-
-    auto camera = scene.newEntity();
-    scene.assign<Camera>(camera).setPerspectiveProjection(90.0f, 1.0f, .01f, 100.0f);
-    KeyboardMovementController controller;
-    scene.assign<Transform>(camera);
-
-    FrameBufferUsageRenderer renderer{width, height};
-
-    auto obj = scene.newEntity();    
-    scene.assign<gfx::Model>(obj).loadModelFromPath("../assets/cat.obj");
-    scene.assign<Transform>(obj).translation = {0, 0, 1};
-    scene.get<Transform>(obj).scale = {0.01, 0.01, 0.01};
-    scene.get<Transform>(obj).rotation = {-glm::half_pi<float>(), 0, 0};
+    BasicTexture example{};
 
     while (!window.shouldClose())
     {
@@ -57,14 +43,8 @@ void App::run()
         glClearColor(.1, .1, .1, 1);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        auto& transform = scene.get<Transform>(camera);
-
-        controller.moveInPlaneXZ(window.getGLFWwindow(), 0.01, transform.translation, transform.rotation);
-        auto& cam = scene.get<Camera>(camera); 
-        cam.setViewYXZ(transform.translation, transform.rotation);
-
-        renderer.render(scene, camera);
-
+        example.render();
+        
         myImGuiStartFrame();
 
         ImGui::Begin("info");

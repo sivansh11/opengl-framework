@@ -27,10 +27,12 @@ namespace gfx
     class Texture2D
     {
     public:
+        Texture2D() = default;
         Texture2D(const char *imgPath);
-        Texture2D(int width, int height, void* data, GLuint format);
+        Texture2D(int width, int height, unsigned char* data, GLuint format);
         ~Texture2D();
-        void init(int width, int height, void* data, GLuint format);
+        void load(const char *imgPath);
+        void load(int width, int height, unsigned char* data, GLuint format);
         void remove();
         void bind(int uint_);
         void unBind(int uint_);

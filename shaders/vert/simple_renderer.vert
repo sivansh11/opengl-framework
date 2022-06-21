@@ -7,8 +7,8 @@ layout (location = 3) in vec2 uv;
 
 layout (location = 0) out vec3 outCol;
 
-uniform mat4 view;
 uniform mat4 proj;
+uniform mat4 view;
 uniform mat4 model;
 
 void main()

@@ -10,7 +10,8 @@
                 "${workspaceFolder}/examples",
                 "${workspaceFolder}/deps/glfw/include",
                 "${workspaceFolder}/editor",
-                "${workspaceFolder}/deps/assimp/include"
+                "${workspaceFolder}/deps/assimp/include",
+                "${workspaceFolder}/deps/stb_image/include"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

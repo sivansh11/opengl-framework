@@ -26,8 +26,8 @@ target_link_libraries(${PROJECT_NAME}
     glad
     glfw
     imgui
-    assimp
     stb_image
+    assimp
     pthread
     stdc++fs
 )

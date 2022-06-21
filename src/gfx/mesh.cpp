@@ -13,16 +13,27 @@ Mesh::~Mesh()
     
 }
 
-Mesh::Mesh(std::vector<Vertex> &vertices, std::vector<uint32_t> &indices, std::vector<Texture2D> &textures)
+Mesh::Mesh(std::vector<Vertex> &vertices, std::vector<unsigned int> &indices, std::vector<Texture2D> &textures)
 {
     load(vertices, indices, textures);
 }
 
-void Mesh::load(std::vector<Vertex> &vertices, std::vector<uint32_t> &indices, std::vector<Texture2D> &textures)
+void Mesh::load(std::vector<Vertex> &vertices, std::vector<unsigned int> &indices, std::vector<Texture2D> &textures)
 {
     Mesh::textures = textures;
     Mesh::vertices = vertices;
     Mesh::indices = indices;
+}
+
+void Mesh::free()
+{
+    for (auto &texture: textures)
+    {
+        texture.free();
+    }
+    vao.free();
+    vbo.free();
+    ebo.free();
 }
 
 void Mesh::setupMesh()
@@ -30,14 +41,9 @@ void Mesh::setupMesh()
     vao.bind();
     vbo.bind();
     vbo.load((float*)(vertices.data()), sizeof(vertices[0]) * vertices.size());
-    verticesSize = vertices.size();
 
-    if (indices.size() != 0)
-    {   
-        ebo.bind();
-        ebo.load((uint32_t*)(indices.data()), sizeof(indices[0]) * indices.size());
-        indicesSize = indices.size();
-    }
+    ebo.bind();
+    ebo.load((unsigned int*)(indices.data()), sizeof(indices[0]) * indices.size());
 
     vao.linkVertexBuffer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(offsetof(Vertex, position)));
     vao.linkVertexBuffer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(offsetof(Vertex, normal)));
@@ -63,25 +69,13 @@ void Mesh::draw(ShaderProgram &shader)
         {
             number = std::to_string(specN++);
         }
-        shader.veci((name + number).c_str(), i);
         textures[i].bind(i);
+        shader.veci((name + number).c_str(), i);
     }
 
-    bind();
-    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
-    unBind();
-}
-
-void Mesh::unBind()
-{
-    vao.unBind();
-    ebo.unBind();
-}
-
-void Mesh::bind()
-{
     vao.bind();
-    ebo.bind();
+    glCall(glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0));
+    vao.unBind();
 }
 
 } // namespace gfx

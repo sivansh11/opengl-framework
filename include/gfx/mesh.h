@@ -41,17 +41,16 @@ public:
     };
 
     Mesh();
-    Mesh(std::vector<Vertex> &vertices, std::vector<uint32_t> &indices, std::vector<Texture2D> &textures);
+    Mesh(std::vector<Vertex> &vertices, std::vector<unsigned int> &indices, std::vector<Texture2D> &textures);
     ~Mesh();
 
-    void load(std::vector<Vertex> &vertices, std::vector<uint32_t> &indices, std::vector<Texture2D> &textures);
-    void bind();
-    void unBind();
+    void load(std::vector<Vertex> &vertices, std::vector<unsigned int> &indices, std::vector<Texture2D> &textures);
     void draw(ShaderProgram &shader);
+    void free();
 
     std::vector<Texture2D> textures;
     std::vector<Vertex> vertices;
-    std::vector<uint32_t> indices;
+    std::vector<unsigned int> indices;
 
 private:
     void setupMesh();
@@ -60,11 +59,6 @@ private:
     VertexArray vao{};
     VertexBuffer vbo{};
     ElementBuffer ebo{};
-
-    size_t verticesSize = 0;
-    size_t indicesSize = 0;
-
-    bool hasIndexBuffer = false;
 };
 
 } // namespace gfx

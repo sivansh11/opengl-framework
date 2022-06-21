@@ -15,6 +15,7 @@ namespace gfx
         ~ElementBuffer();
 
         void load(GLuint *indices, size_t size);
+        void free();
         void bind();
         void unBind();
 

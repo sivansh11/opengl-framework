@@ -15,14 +15,17 @@ Model::Model()
 }
 Model::~Model()
 {
-
+    for (auto &mesh: meshes)
+    {
+        mesh.free();
+    }
 }
 void Model::loadModelFromPath(std::string filePath)
 {
     Assimp::Importer importer;
     const aiScene *scene = importer.ReadFile(filePath,
         aiProcess_Triangulate |
-        aiProcess_FlipUVs |
+        aiProcess_FlipUVs     |
         aiProcess_GenNormals
     );    
 
@@ -32,7 +35,7 @@ void Model::loadModelFromPath(std::string filePath)
     }
     directory = filePath.substr(0, filePath.find_last_of('/'));
     processNode(scene->mRootNode, scene);
-    DEBUGMESSAGE((std::to_string(meshes.size()) + " Meshes").c_str());
+    DEBUGMESSAGE((std::to_string(meshes.size()) + " Meshes and " + std::to_string(texturesLoaded.size()) + " Textures").c_str());
 }
 
 void Model::processNode(aiNode *node, const aiScene *scene)
@@ -99,7 +102,7 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
         {
             indices.push_back(face.mIndices[j]);
         }
-    }
+    } 
 
     aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
 
@@ -141,20 +144,6 @@ std::vector<Texture2D> Model::loadMaterialTextures(aiMaterial *mat, aiTextureTyp
     return textures;
 }
 
-void Model::bind()
-{
-    for (auto &mesh: meshes)
-    {
-        mesh.bind();
-    }
-}
-void Model::unBind()
-{
-    for (auto &mesh: meshes)
-    {
-        mesh.unBind();
-    }
-}
 void Model::draw(ShaderProgram shader)
 {
     for (auto &mesh: meshes)

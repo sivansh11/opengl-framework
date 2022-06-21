@@ -8,6 +8,10 @@ namespace gfx
     }
     VertexArray::~VertexArray()
     {
+
+    }
+    void VertexArray::free()
+    {
         glCall(glDeleteVertexArrays(1, &id));
     }
     void VertexArray::bind()

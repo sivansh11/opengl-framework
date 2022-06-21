@@ -14,6 +14,8 @@ namespace gfx
 
         void linkVertexBuffer(GLuint layout, unsigned int size, GLenum type, GLenum normalize, unsigned int stride, void * offset);
 
+        void free();
+        
         void bind();
         void unBind();
 

@@ -10,6 +10,10 @@ namespace gfx
     }
     VertexBuffer::~VertexBuffer()
     {
+        
+    }
+    void VertexBuffer::free()
+    {
         glCall(glDeleteBuffers(1, &id));
     }
     /*

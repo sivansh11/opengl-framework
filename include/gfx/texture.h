@@ -36,6 +36,7 @@ namespace gfx
         void remove();
         void bind(int unit);
         void unBind(int unit);
+        void free();
 
         int width, height;
         std::string type;

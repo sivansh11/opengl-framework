@@ -55,6 +55,10 @@ namespace gfx
     }
     Texture2D::~Texture2D()
     {
+
+    }
+    void Texture2D::free()
+    {
         glCall(glDeleteTextures(1, &id));
     }
     void Texture2D::load(int width, int height, unsigned char* data, GLuint format, std::string type)
@@ -79,7 +83,7 @@ namespace gfx
         int width, height, nChannels;
         stbi_set_flip_vertically_on_load(true);
         unsigned char *data = stbi_load(imgPath, &width, &height, &nChannels, 0);
-        ASSERT(data, stbi_failure_reason());
+        ASSERT(data, std::string("file: ") + imgPath + " Error:" + stbi_failure_reason());
         GLint format;
         switch (nChannels)
         {

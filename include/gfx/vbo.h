@@ -15,6 +15,7 @@ namespace gfx
         ~VertexBuffer();
 
         void load(float* verticies, size_t size);
+        void free();
         void bind();
         void unBind();
 

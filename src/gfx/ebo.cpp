@@ -10,6 +10,10 @@ namespace gfx
     }
     ElementBuffer::~ElementBuffer()
     {
+
+    }
+    void ElementBuffer::free()
+    {
         glCall(glDeleteBuffers(1, &id));
     }
     void ElementBuffer::load(GLuint *indices, size_t size)

@@ -17,6 +17,8 @@ add_executable(${PROJECT_NAME} ${SRC_FILES})
 
 include_directories(${PROJECT_NAME}
     include
+    examples
+    editor
 )
 
 target_link_libraries(${PROJECT_NAME}

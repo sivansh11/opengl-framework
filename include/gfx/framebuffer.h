@@ -48,10 +48,14 @@ public:
     void create(const FramebufferSpecification& spec);
 
     void invalidate();
+    void invalidate(int width, int height);
 
     void bind();
     void unBind();
     void bindTexture() { glCall(glBindTexture(GL_TEXTURE_2D, getColorTexture())); }
+
+    float width() { return m_spec.width; }
+    float height() { return m_spec.height; }
 
     GLuint getColorTexture();
     

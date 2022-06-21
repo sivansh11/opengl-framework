@@ -9,6 +9,9 @@
 
 #include "gfx/texture.h"
 
+namespace example
+{
+
 class BasicTexture
 {
 public:
@@ -57,5 +60,7 @@ private:
 
     gfx::Texture2D texture{};
 };
+
+} // namespace example
 
 #endif

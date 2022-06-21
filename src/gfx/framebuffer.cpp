@@ -12,7 +12,7 @@ Framebuffer::~Framebuffer()
     glCall(glDeleteFramebuffers(1, &id));
     for (auto tex: attachments)
     {
-        glDeleteTextures(1, &tex);
+        glCall(glDeleteTextures(1, &tex));
     }
     attachments.clear();
 }
@@ -51,9 +51,25 @@ void Framebuffer::invalidate()
     }
 
     if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-                std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+    {
+        std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+        ASSERT(false, "");
+    }
 
     unBind();
+}
+void Framebuffer::invalidate(int width, int heigth)
+{
+    if (m_spec.width == width && m_spec.height == heigth) return;
+    m_spec.width = width;
+    m_spec.height = heigth;
+    glCall(glDeleteFramebuffers(1, &id));
+    for (auto tex: attachments)
+    {
+        glCall(glDeleteTextures(1, &tex));
+    }
+    attachments.clear();
+    invalidate();
 }
 
 void Framebuffer::create(const FramebufferSpecification& spec)

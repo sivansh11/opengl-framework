@@ -5,7 +5,11 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/include",
-                "${workspaceFolder}/deps/glad/include"
+                "${workspaceFolder}/deps/glad/include",
+                "${workspaceFolder}/deps/glm",
+                "${workspaceFolder}/examples",
+                "${workspaceFolder}/deps/glfw/include",
+                "${workspaceFolder}/editor"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

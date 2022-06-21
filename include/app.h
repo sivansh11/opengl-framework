@@ -14,7 +14,7 @@ public:
 
 private:
     std::string title = "ogl";
-    int width = 800;
+    int width = 1200;
     int height = 800;
     Window window;
     Dispatcher dispatcher;

@@ -30,14 +30,27 @@ public:
         light = scene.newEntity();
         scene.assign<gfx::Model>(light).loadModelFromPath("../assets/cube.obj", false);
         scene.assign<Transform>(light).scale = {.05, .05, .05};
-        scene.get<Transform>(light).translation = {0, 3, 2};
+        scene.get<Transform>(light).translation = {0, 0, 0};
         scene.assign<Light>(light);
         
+        // model = scene.newEntity();
+        // scene.assign<gfx::Model>(model).loadModelFromPath("../assets/floatcity/Scifi Floating City/Scifi Floating City.obj");
+        // scene.assign<Transform>(model).scale = {.01, .01, .01};
+        // scene.get<Transform>(model).translation = {0, 0, 2};
+        // scene.assign<gfx::Material>(model);
+
+        gfx::Model m;
+        m.loadModelFromPath("../assets/quad.obj", false);
         model = scene.newEntity();
-        scene.assign<gfx::Model>(model).loadModelFromPath("../assets/Sponza/sponza.obj");
-        scene.assign<Transform>(model).scale = {.01, .01, .01};
-        scene.get<Transform>(model).translation = {0, 0, 2};
+        // scene.assign<gfx::Mesh>(model) = m.meshes[0];
+        std::vector<gfx::Texture2D> tex;
+        tex.push_back(gfx::Texture2D("../textures/brickwall_diffuse.jpg", "diffuse"));
+        tex.push_back(gfx::Texture2D("../textures/brickwall_normal.jpg", "normal"));
+        scene.assign<gfx::Mesh>(model).load(m.meshes[0].vertices, m.meshes[0].indices, tex);
+        scene.assign<Transform>(model);
         scene.assign<gfx::Material>(model);
+
+        m.free();
     }
     ~Editor()
     {

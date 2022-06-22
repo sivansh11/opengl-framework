@@ -31,12 +31,17 @@ public:
         shader.attachShader("../shaders/frag/object.frag");
         shader.link();
 
+        meshShader.attachShader("../shaders/vert/mesh.vert");
+        meshShader.attachShader("../shaders/frag/mesh.frag");
+        meshShader.link();
+
     }
 
     ~Renderer()
     {
         lightShader.free();
         shader.free();
+        meshShader.free();
     }
 
     void render(ecs::EntityID camera)
@@ -65,11 +70,10 @@ public:
         }   
 
         shader.bind();
-        for (auto ent: ecs::SceneView<gfx::Material>(scene))
+        for (auto ent: ecs::SceneView<gfx::Material, gfx::Model>(scene))
         {
             auto& model = scene.get<gfx::Model>(ent);
             auto& transform = scene.get<Transform>(ent);
-            auto& material = scene.get<gfx::Material>(ent);
             mod = transform.mat4();
             shader.Mat4f("proj", glm::value_ptr(proj));    
             shader.Mat4f("view", glm::value_ptr(view));    
@@ -80,6 +84,22 @@ public:
             shader.vec3f("light.specular", glm::value_ptr(scene.get<Light>(light).specular));
             shader.vec3f("cameraPos", glm::value_ptr(scene.get<Transform>(camera).translation));
             model.draw(shader);
+        }
+        meshShader.bind();
+        for (auto ent: ecs::SceneView<gfx::Mesh>(scene))
+        {
+            auto& mesh = scene.get<gfx::Mesh>(ent);
+            auto& transform = scene.get<Transform>(ent);
+            mod = transform.mat4();
+            meshShader.Mat4f("proj", glm::value_ptr(proj));    
+            meshShader.Mat4f("view", glm::value_ptr(view));    
+            meshShader.Mat4f("model", glm::value_ptr(mod));
+            meshShader.vec3f("light.lightPos", glm::value_ptr(scene.get<Transform>(light).translation));
+            meshShader.vec3f("light.ambient", glm::value_ptr(scene.get<Light>(light).ambient));
+            meshShader.vec3f("light.diffuse", glm::value_ptr(scene.get<Light>(light).diffuse));
+            meshShader.vec3f("light.specular", glm::value_ptr(scene.get<Light>(light).specular));
+            meshShader.vec3f("cameraPos", glm::value_ptr(scene.get<Transform>(camera).translation));
+            mesh.draw(meshShader);
         }
 
     }
@@ -96,6 +116,7 @@ private:
 
     gfx::ShaderProgram lightShader{};
     gfx::ShaderProgram shader{};
+    gfx::ShaderProgram meshShader{};
 
 };
 

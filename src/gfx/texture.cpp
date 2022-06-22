@@ -80,6 +80,7 @@ namespace gfx
     }
     void Texture2D::load(const char *imgPath, std::string type)
     {
+        path = imgPath;
         int width, height, nChannels;
         stbi_set_flip_vertically_on_load(true);
         unsigned char *data = stbi_load(imgPath, &width, &height, &nChannels, 0);

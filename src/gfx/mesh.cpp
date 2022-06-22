@@ -94,7 +94,7 @@ void Mesh::draw(ShaderProgram &shader)
     shader.vec3f("material.diffuse", glm::value_ptr(material.diffuse));
     shader.vec3f("material.specular", glm::value_ptr(material.specular));
     shader.vecf("material.shininess", material.shininess);
-
+    
     glCall(glBindVertexArray(VAO));
     glCall(glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0));
     glCall(glBindVertexArray(0));

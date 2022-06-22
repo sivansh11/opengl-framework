@@ -14,7 +14,7 @@ uniform mat4 model;
 void main()
 {
     outPos = vec3(model * vec4(inPos, 1));
-    outNor = vec3(inverse(model) * vec4(inNor, 0));
+    outNor = mat3(transpose(inverse(model))) * inNor;
     outTex = inTex;
 	gl_Position = proj * view * vec4(outPos, 1);	
 }

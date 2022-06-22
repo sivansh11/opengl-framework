@@ -17,8 +17,8 @@ namespace gfx
             void printShaderInfoLog();
             void free();
             GLuint id;
-        private:
             const char *shaderPath;
+        private:
         };
 
     public:

@@ -28,6 +28,7 @@ public:
     void free();
     void draw(ShaderProgram shader);
 
+    std::vector<Mesh> meshes;
 private:
     void processNode(aiNode *node, const aiScene *scene);
     Mesh processMesh(aiMesh *mesh, const aiScene *scene);
@@ -35,7 +36,6 @@ private:
 
 private:
     std::string directory;
-    std::vector<Mesh> meshes;
     std::vector<Texture2D> texturesLoaded;
     bool defaultTextures;
 };

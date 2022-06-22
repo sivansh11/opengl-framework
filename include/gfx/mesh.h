@@ -18,6 +18,14 @@
 
 namespace gfx
 {
+
+struct Material 
+{
+    glm::vec3 ambient{.1};
+    glm::vec3 diffuse{1};
+    glm::vec3 specular{1};
+    float shininess = 32;
+};
     
 class Mesh
 {
@@ -47,6 +55,8 @@ public:
     std::vector<Texture2D> textures;
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
+
+    Material material{};
 
 private:
     void setupMesh();

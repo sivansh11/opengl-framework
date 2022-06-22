@@ -32,11 +32,11 @@ public:
         scene.assign<Transform>(light).scale = {.01, .01, .01};
         scene.assign<Light>(light);
         
-        auto model = scene.newEntity();
-        scene.assign<gfx::Model>(model).loadModelFromPath("../assets/glTF/Sponza.gltf");
+        model = scene.newEntity();
+        scene.assign<gfx::Model>(model).loadModelFromPath("../assets/Sponza/sponza.obj");
         scene.assign<Transform>(model).scale = {.01, .01, .01};
         scene.get<Transform>(model).translation = {0, 0, 2};
-        scene.assign<Object>(model);
+        scene.assign<gfx::Material>(model);
     }
     ~Editor()
     {
@@ -61,7 +61,7 @@ public:
 
     void render()
     {
-        glCall(glClearColor(121, 210, 247, 1));
+        glCall(glClearColor(0, 0, 0, 1));
         glCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
         glCall(glEnable(GL_DEPTH_TEST));
 
@@ -70,6 +70,12 @@ public:
         myImGuiStartFrame();
 
         ImGui::Text("NOTE: PRESS L ALONG WITH AWSD TO MOVE LIGHT");
+
+        ImGui::Begin("light");
+        ImGui::DragFloat3("ambient", (float*)&scene.get<Light>(light).ambient, .01);
+        ImGui::DragFloat3("diffuse", (float*)&scene.get<Light>(light).diffuse, .01);
+        ImGui::DragFloat3("specular", (float*)&scene.get<Light>(light).specular, .01);
+        ImGui::End();
 
         renderer.imguiRender();
 
@@ -83,6 +89,7 @@ private:
     ecs::Scene scene;
     ecs::EntityID editorCamera;
     ecs::EntityID light;
+    ecs::EntityID model;
     
     Dispatcher dispatcher{};
 

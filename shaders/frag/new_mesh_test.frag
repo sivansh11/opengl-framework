@@ -16,29 +16,35 @@ layout (std430, binding = 1) buffer cameraBuffer
     vec3 cameraPos;
 };
 
+struct Material
+{
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+    float shininess;
+};
+uniform Material material;
+
 uniform sampler2D diffuse1;
 uniform sampler2D specular1;
 
 void main()
 {
-    // ambient
-    float ambient = 0.1;
+    float ambient = 0.10f;
 
-    // diffuse
-    vec3 norm = normalize(inNor);
-    vec3 lightDir = normalize(lightPos - inPos);
-    float diffuse = max(dot(norm, lightDir), 0.0);
+    vec3 normal = normalize(inNor);
+    vec3 lightDirection = normalize(lightPos - inPos);
+    float diffuse = max(dot(normal, lightDirection), 0.0f);
 
-    // specular
-    vec3 viewDir = normalize(cameraPos - inPos);
-    vec3 reflectDir = reflect(-lightDir, norm);
-    float specular = pow(max(dot(cameraPos, reflectDir), 0.0), 32) * 0.1;
+    float specularLight = 0.50f;
+    vec3 viewDirection = normalize(cameraPos - inPos);
+    vec3 reflectionDirection = reflect(-lightDirection, normal);
+    float specAmount = pow(max(dot(viewDirection, reflectionDirection), 0.0), 8);
+    float specular = specAmount * specularLight;
 
-    // fragCol = (ambient + diffuse + specular) * vec4(1, 1, 1, 1) * texture(diffuse1, inTex) * texture(specular1, inTex);
+    vec4 zero = texture(specular1, inTex) * 0.000001;
 
-    vec3 ambientCol = ambient * vec3(texture(diffuse1, inTex));
-    vec3 diffuseCol = diffuse * vec3(texture(diffuse1, inTex));
-    vec3 specularCol = specular * vec3(texture(specular1, inTex));
-    fragCol = vec4(ambientCol + diffuseCol + specularCol, 1.0);
+    fragCol = texture(diffuse1, inTex) * vec4(lightCol * (diffuse + ambient + specular), 1) + zero;
+
 }
 

@@ -13,9 +13,10 @@
 
 struct Light 
 {
-    glm::vec3 lightCol{1};
+    glm::vec3 ambient{1};
+    glm::vec3 diffuse{3};
+    glm::vec3 specular{1};
 };
-struct Object {};
 
 class Renderer
 {
@@ -58,22 +59,25 @@ public:
             lightShader.Mat4f("proj", glm::value_ptr(proj));    
             lightShader.Mat4f("view", glm::value_ptr(view));    
             lightShader.Mat4f("model", glm::value_ptr(mod));
-            lightShader.vec3f("lightCol", glm::value_ptr(scene.get<Light>(ent).lightCol));
+            lightShader.vec3f("lightCol", glm::value_ptr(scene.get<Light>(ent).ambient));
             model.draw(lightShader);
             light = ent;
         }   
 
         shader.bind();
-        for (auto ent: ecs::SceneView<Object>(scene))
+        for (auto ent: ecs::SceneView<gfx::Material>(scene))
         {
             auto& model = scene.get<gfx::Model>(ent);
             auto& transform = scene.get<Transform>(ent);
+            auto& material = scene.get<gfx::Material>(ent);
             mod = transform.mat4();
             shader.Mat4f("proj", glm::value_ptr(proj));    
             shader.Mat4f("view", glm::value_ptr(view));    
             shader.Mat4f("model", glm::value_ptr(mod));
-            shader.vec3f("lightPos", glm::value_ptr(scene.get<Transform>(light).translation));
-            shader.vec3f("lightCol", glm::value_ptr(scene.get<Light>(light).lightCol));
+            shader.vec3f("light.lightPos", glm::value_ptr(scene.get<Transform>(light).translation));
+            shader.vec3f("light.ambient", glm::value_ptr(scene.get<Light>(light).ambient));
+            shader.vec3f("light.diffuse", glm::value_ptr(scene.get<Light>(light).diffuse));
+            shader.vec3f("light.specular", glm::value_ptr(scene.get<Light>(light).specular));
             shader.vec3f("cameraPos", glm::value_ptr(scene.get<Transform>(camera).translation));
             model.draw(shader);
         }

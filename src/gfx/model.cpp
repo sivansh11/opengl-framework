@@ -117,14 +117,59 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
     std::vector<Texture2D> specMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "specular");
     textures.insert(textures.end(), specMaps.begin(), specMaps.end());
 
-    return Mesh(vertices, indices, textures);
+    std::vector<Texture2D> normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "normal");
+    textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
+
+    Mesh mesh_(vertices, indices, textures);
+    aiColor4D color;
+    if (AI_SUCCESS == aiGetMaterialColor(material, AI_MATKEY_COLOR_AMBIENT, &color))
+    {
+        mesh_.material.ambient.r = color.r;   
+        mesh_.material.ambient.g = color.g;   
+        mesh_.material.ambient.b = color.b;   
+    }
+    else
+    {
+        mesh_.material.ambient = {1, 1, 1};
+    }
+    if (AI_SUCCESS == aiGetMaterialColor(material, AI_MATKEY_COLOR_DIFFUSE, &color))
+    {
+        mesh_.material.diffuse.r = color.r;   
+        mesh_.material.diffuse.g = color.g;   
+        mesh_.material.diffuse.b = color.b;   
+    }
+    else
+    {
+        mesh_.material.diffuse = {1, 1, 1};
+    }
+    if (AI_SUCCESS == aiGetMaterialColor(material, AI_MATKEY_COLOR_SPECULAR, &color))
+    {
+        mesh_.material.specular.r = color.r;   
+        mesh_.material.specular.g = color.g;   
+        mesh_.material.specular.b = color.b;   
+    }
+    else
+    {
+        mesh_.material.specular = {1, 1, 1};  
+    }
+    float shininess;
+    if (AI_SUCCESS == aiGetMaterialFloat(material, AI_MATKEY_SHININESS, &shininess))
+    {
+         mesh_.material.shininess = shininess;
+    }
+    else
+    {
+         mesh_.material.shininess = 32;
+    }
+
+    return mesh_;
 }
 
 std::vector<Texture2D> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName)
 {
     std::vector<Texture2D> textures;
     
-    if (mat->GetTextureCount(type) == 0 && defaultTextures)
+    if (mat->GetTextureCount(type) == 0 && defaultTextures && typeName != "normal")
     {
         std::vector<Texture2D> tex;
         Texture2D emptyTex;

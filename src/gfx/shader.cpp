@@ -122,7 +122,7 @@ namespace gfx
     int ShaderProgram::uniformLoc(const char* uniformName)
     {
         int val = glCall(glGetUniformLocation(id, uniformName));
-        ASSERT(val != -1, (std::string("uniform not there in shader:") + "uniform name is " + uniformName));
+        ASSERT(val != -1, (std::string("uniform not there in shader: ") + shaders[0].shaderPath + "\nuniform name is " + uniformName));
         return val;
     }
     void ShaderProgram::Mat4f(const char* uniformName, const float *valuePointer, GLboolean transpose)

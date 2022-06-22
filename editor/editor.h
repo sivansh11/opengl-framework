@@ -34,11 +34,11 @@ public:
         scene.assign<Light>(light);
         
         model = scene.newEntity();
-        scene.assign<gfx::Model>(model).loadModelFromPath("../assets/cube.obj");
+        scene.assign<gfx::Model>(model).loadModelFromPath("../assets/cube.obj", false);
         scene.assign<Transform>(model).scale = {1, 1, 1};
         scene.get<gfx::Model>(model).meshes[0].material.ambient = glm::vec3{1};
-        scene.get<gfx::Model>(model).meshes[0].material.diffuse = glm::vec3{1};
-        scene.get<gfx::Model>(model).meshes[0].material.specular = glm::vec3{1};
+        scene.get<gfx::Model>(model).meshes[0].material.diffuse = glm::vec3{0};
+        scene.get<gfx::Model>(model).meshes[0].material.specular = glm::vec3{0};
         scene.get<Transform>(model).translation = {0, 0, 2};
         scene.assign<gfx::Material>(model);
 

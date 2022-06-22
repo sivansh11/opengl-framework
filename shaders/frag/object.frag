@@ -27,8 +27,8 @@ uniform Light light;
 
 uniform vec3 cameraPos;
 
-uniform sampler2D diffuse1;
-uniform sampler2D specular1;
+// uniform sampler2D diffuse1;
+// uniform sampler2D specular1;
 
 void main()
 {
@@ -39,15 +39,16 @@ void main()
     vec3 norm = normalize(inNor);
     vec3 lightDir = normalize(light.lightPos - inPos);
     float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = light.diffuse * (diff * material.diffuse) * texture(diffuse1, inTex).xyz;    
-    // vec3 diffuse = light.diffuse * (diff * material.diffuse);    
+    // vec3 diffuse = light.diffuse * (diff * material.diffuse) * texture(diffuse1, inTex).xyz;    
+    vec3 diffuse = light.diffuse * (diff * material.diffuse);    
 
     // specular
     vec3 viewDir = normalize(cameraPos - inPos);
     vec3 reflectDir = reflect(-lightDir, norm);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-    vec3 specular = light.specular * (spec * material.specular) + (texture(specular1, inTex).xyz * 0.0000001);
-    // vec3 specular = light.specular * (spec * material.specular);
+    vec3 halfwayDir = normalize(lightDir + viewDir);
+    float spec = pow(max(dot(norm, halfwayDir), 0.0), material.shininess);
+    // vec3 specular = light.specular * (spec * material.specular) * texture(specular1, inTex).xyz;
+    vec3 specular = light.specular * (spec * material.specular);
 
     vec3 result = ambient + diffuse + specular;
     fragCol = vec4(result, 1.0);

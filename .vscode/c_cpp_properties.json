@@ -11,7 +11,8 @@
                 "${workspaceFolder}/deps/glfw/include",
                 "${workspaceFolder}/editor",
                 "${workspaceFolder}/deps/assimp/include",
-                "${workspaceFolder}/deps/stb_image/include"
+                "${workspaceFolder}/deps/stb_image/include",
+                "${workspaceFolder}/build/deps/assimp/include"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

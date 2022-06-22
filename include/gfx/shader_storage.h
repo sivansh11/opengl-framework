@@ -19,6 +19,7 @@ public:
     void update_cpu(void* data, size_t dataSize);
 
     void bind(int binding);
+    void free();
     void unBind();
 
 private:

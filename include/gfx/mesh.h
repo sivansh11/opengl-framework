@@ -3,10 +3,6 @@
 
 #include "core.h"
 
-#include "ebo.h"
-#include "vao.h"
-#include "vbo.h"
-
 #include "shader.h"
 #include "texture.h"
 
@@ -56,9 +52,7 @@ private:
     void setupMesh();
 
 private:
-    VertexArray vao{};
-    VertexBuffer vbo{};
-    ElementBuffer ebo{};
+    GLuint VAO, VBO, EBO;
 };
 
 } // namespace gfx

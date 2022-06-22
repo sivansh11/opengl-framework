@@ -32,8 +32,13 @@ void main()
     // specular
     vec3 viewDir = normalize(cameraPos - inPos);
     vec3 reflectDir = reflect(-lightDir, norm);
-    float specular = pow(max(dot(cameraPos, reflectDir), 0.0), 32) * 0.5;
+    float specular = pow(max(dot(cameraPos, reflectDir), 0.0), 32) * 0.1;
 
-    fragCol = (ambient + diffuse + specular) * vec4(1, 1, 1, 1) * texture(diffuse1, inTex) * texture(specular1, inTex);
+    // fragCol = (ambient + diffuse + specular) * vec4(1, 1, 1, 1) * texture(diffuse1, inTex) * texture(specular1, inTex);
+
+    vec3 ambientCol = ambient * vec3(texture(diffuse1, inTex));
+    vec3 diffuseCol = diffuse * vec3(texture(diffuse1, inTex));
+    vec3 specularCol = specular * vec3(texture(specular1, inTex));
+    fragCol = vec4(ambientCol + diffuseCol + specularCol, 1.0);
 }
 

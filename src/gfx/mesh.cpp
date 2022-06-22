@@ -23,6 +23,7 @@ void Mesh::load(std::vector<Vertex> &vertices, std::vector<unsigned int> &indice
     Mesh::textures = textures;
     Mesh::vertices = vertices;
     Mesh::indices = indices;
+    setupMesh();
 }
 
 void Mesh::free()
@@ -31,25 +32,36 @@ void Mesh::free()
     {
         texture.free();
     }
-    vao.free();
-    vbo.free();
-    ebo.free();
+    glCall(glDeleteBuffers(1, &VBO));
+    glCall(glDeleteBuffers(1, &EBO));
+    glCall(glDeleteVertexArrays(1, &VAO));
 }
 
 void Mesh::setupMesh()
 {
-    vao.bind();
-    vbo.bind();
-    vbo.load((float*)(vertices.data()), sizeof(vertices[0]) * vertices.size());
+    glCall(glGenVertexArrays(1, &VAO));
+    glCall(glGenBuffers(1, &VBO));
+    glCall(glGenBuffers(1, &EBO));
 
-    ebo.bind();
-    ebo.load((unsigned int*)(indices.data()), sizeof(indices[0]) * indices.size());
+    glCall(glBindVertexArray(VAO));
+    glCall(glBindBuffer(GL_ARRAY_BUFFER, VBO));
 
-    vao.linkVertexBuffer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(offsetof(Vertex, position)));
-    vao.linkVertexBuffer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(offsetof(Vertex, normal)));
-    vao.linkVertexBuffer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(offsetof(Vertex, uv)));
+    glCall(glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW));  
 
-    vao.unBind();
+    glCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO));
+    glCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW));
+
+    // vertex positions
+    glCall(glEnableVertexAttribArray(0));	
+    glCall(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position)));
+    // vertex normals
+    glCall(glEnableVertexAttribArray(1));	
+    glCall(glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal)));
+    // vertex texture coords
+    glCall(glEnableVertexAttribArray(2));	
+    glCall(glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv)));
+
+    glCall(glBindVertexArray(0));
 }
 
 void Mesh::draw(ShaderProgram &shader)
@@ -73,9 +85,9 @@ void Mesh::draw(ShaderProgram &shader)
         shader.veci((name + number).c_str(), i);
     }
 
-    vao.bind();
+    glCall(glBindVertexArray(VAO));
     glCall(glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0));
-    vao.unBind();
+    glCall(glBindVertexArray(0));
 }
 
 } // namespace gfx

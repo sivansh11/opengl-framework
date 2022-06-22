@@ -9,6 +9,11 @@ Framebuffer::Framebuffer(const FramebufferSpecification& spec) : m_spec(spec)
 }
 Framebuffer::~Framebuffer()
 {
+    
+}
+
+void Framebuffer::free()
+{
     glCall(glDeleteFramebuffers(1, &id));
     for (auto tex: attachments)
     {

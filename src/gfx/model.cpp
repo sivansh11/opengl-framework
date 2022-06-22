@@ -15,6 +15,10 @@ Model::Model()
 }
 Model::~Model()
 {
+
+}
+void Model::free()
+{
     for (auto &mesh: meshes)
     {
         mesh.free();
@@ -118,6 +122,21 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
 std::vector<Texture2D> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName)
 {
     std::vector<Texture2D> textures;
+    
+    // if (mat->GetTextureCount(type) == 0)
+    // {
+    //     std::vector<Texture2D> tex;
+    //     Texture2D emptyTex;
+    //     unsigned char *data = new unsigned char[4];
+    //     for (int i = 0; i < 4; i++)
+    //     {
+    //         data[i] = 255;
+    //     } 
+    //     emptyTex.load(1, 1, data, GL_RGBA, typeName);
+    //     tex.push_back(emptyTex);
+    //     return tex;
+    // }
+
     for (unsigned int i = 0; i < mat->GetTextureCount(type); i++)
     {
         aiString str;

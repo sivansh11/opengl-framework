@@ -25,6 +25,7 @@ public:
     ~Model();
     
     void loadModelFromPath(std::string filePath);
+    void free();
     void draw(ShaderProgram shader);
 
 private:

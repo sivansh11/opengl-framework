@@ -8,6 +8,10 @@ ShaderStorage::ShaderStorage(void* data, size_t dataSize)
 {
     init(data, dataSize);
 }
+void ShaderStorage::free()
+{
+    glCall(glDeleteBuffers(GL_SHADER_STORAGE_BUFFER, &id));
+}
 
 void ShaderStorage::init(void* data, size_t dataSize)
 {

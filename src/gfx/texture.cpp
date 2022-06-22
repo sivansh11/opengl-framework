@@ -106,10 +106,6 @@ namespace gfx
         load(width, height, data, format, type);
         stbi_image_free(data);
     }
-    void Texture2D::remove()
-    {
-        glCall(glDeleteTextures(1, &id));
-    } 
     void Texture2D::bind(int unit)
     {
         glCall(glActiveTexture(GL_TEXTURE0 + unit));

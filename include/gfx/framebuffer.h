@@ -49,6 +49,7 @@ public:
 
     void invalidate();
     void invalidate(int width, int height);
+    void free();
 
     void bind();
     void unBind();

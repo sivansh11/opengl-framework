@@ -19,6 +19,7 @@ include_directories(${PROJECT_NAME}
     include
     examples
     editor
+    renderer
 )
 
 target_link_libraries(${PROJECT_NAME}

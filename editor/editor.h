@@ -1,74 +1,91 @@
 #ifndef EDITOR_H
 #define EDITOR_H
 
-#include "new_model_test.h"
+#include "basic_renderer.h"
 
 #include "imgui_setup.h"
-
 #include "window.h"
-
-#include "gfx/framebuffer.h"
 
 #include "utils/camera.h"
 #include "utils/ecs.h"
-#include "event.h"
 #include "utils/controller.h"
 #include "utils/components.h"
+
+#include "gfx/model.h"
+
+#include "event.h"
 
 class Editor
 {
 public:
-    Editor(Window &window) : window(window), renderer{scene}
+    Editor(Window &window) : window(window), renderer(scene)
     {
         editorCamera = scene.newEntity();
         int width, height; window.size(width, height);
         scene.assign<Camera>(editorCamera);
-        scene.assign<Transform>(editorCamera);
+        scene.assign<Transform>(editorCamera).translation = {0, 0, -2};
 
-        gfx::FramebufferSpecification fbSpec;
-        fbSpec.width = 300;
-        fbSpec.height = 200;
-        fbSpec.attachments.push_back(gfx::Attachments::Color);
-        fbSpec.attachments.push_back(gfx::Attachments::DepthStencil);
-        editorView.create(fbSpec);
+        scene.get<Camera>(editorCamera).setPerspectiveProjection(45, 1200.f/800.f, 0.001, 100);
 
-        scene.get<Camera>(editorCamera).setPerspectiveProjection(45, 300.f/200.f, 0.001, 100);
+        light = scene.newEntity();
+        scene.assign<gfx::Model>(light).loadModelFromPath("../assets/cube.obj");
+        scene.assign<Transform>(light).scale = {.01, .01, .01};
+        scene.assign<Light>(light);
+        
+        auto model = scene.newEntity();
+        scene.assign<gfx::Model>(model).loadModelFromPath("../assets/flat_vase.obj");
+        scene.assign<Transform>(model).rotation = {glm::pi<float>(), 0, 0};
+        scene.assign<Object>(model);
     }
     ~Editor()
     {
-
+        for (auto ent: ecs::SceneView<gfx::Model>(scene))
+        {
+            scene.get<gfx::Model>(ent).free();
+        }
     }
 
     void update(float deltaTime)
     {
-        controller.moveInPlaneXZ(window.getGLFWwindow(), deltaTime, scene.get<Transform>(editorCamera).translation, scene.get<Transform>(editorCamera).rotation);
-        scene.get<Camera>(editorCamera).setViewYXZ(scene.get<Transform>(editorCamera).translation, scene.get<Transform>(editorCamera).rotation);
+        if (glfwGetKey(window.getGLFWwindow(), GLFW_KEY_L) != GLFW_PRESS)
+        {
+            controller.moveInPlaneXZ(window.getGLFWwindow(), deltaTime, scene.get<Transform>(editorCamera).translation, scene.get<Transform>(editorCamera).rotation);
+            scene.get<Camera>(editorCamera).setViewYXZ(scene.get<Transform>(editorCamera).translation, scene.get<Transform>(editorCamera).rotation);
+        }
+        else
+        {
+            controller.moveInPlaneXZ(window.getGLFWwindow(), deltaTime, scene.get<Transform>(light).translation, scene.get<Transform>(light).rotation);
+        }
     }
 
     void render()
     {
-        glClearColor(0,0,0,1);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glEnable(GL_DEPTH_TEST);
+        glCall(glClearColor(0,0,0,1));
+        glCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+        glCall(glEnable(GL_DEPTH_TEST));
+
         renderer.render(editorCamera);
 
         myImGuiStartFrame();
+
+        ImGui::Text("NOTE: PRESS L ALONG WITH AWSD TO MOVE LIGHT");
+
         renderer.imguiRender();
+
         myImGuiEndFrame();
         
     }
 
 private:
-    example::NewModelTest renderer;
+    Renderer renderer;
 
-private:
     ecs::Scene scene;
     ecs::EntityID editorCamera;
+    ecs::EntityID light;
     
     Dispatcher dispatcher{};
 
     KeyboardMovementController controller;
-    gfx::Framebuffer editorView{};
 
     Window &window;
 };

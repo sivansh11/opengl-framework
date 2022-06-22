@@ -33,7 +33,6 @@ namespace gfx
         ~Texture2D();
         void load(const char *imgPath, std::string type);
         void load(int width, int height, unsigned char* data, GLuint format, std::string type);
-        void remove();
         void bind(int unit);
         void unBind(int unit);
         void free();

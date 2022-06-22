@@ -43,6 +43,7 @@ namespace gfx
     void ShaderProgram::Shader::free()
     {
         glCall(glDeleteShader(id));
+        id = 0;
     }
     void ShaderProgram::Shader::printShaderInfoLog()
     {
@@ -60,11 +61,12 @@ namespace gfx
     }
     ShaderProgram::~ShaderProgram()
     {
-        free();
+        // free();
     }
     void ShaderProgram::free()
     {
         glCall(glDeleteProgram(id));
+        id = 0;
     }
     void ShaderProgram::bind()
     {

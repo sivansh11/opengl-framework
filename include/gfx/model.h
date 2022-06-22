@@ -24,7 +24,7 @@ public:
     Model();
     ~Model();
     
-    void loadModelFromPath(std::string filePath);
+    void loadModelFromPath(std::string filePath, bool defaultTextures = true);
     void free();
     void draw(ShaderProgram shader);
 
@@ -37,6 +37,7 @@ private:
     std::string directory;
     std::vector<Mesh> meshes;
     std::vector<Texture2D> texturesLoaded;
+    bool defaultTextures;
 };
 
 } // namespace gfx

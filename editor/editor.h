@@ -28,13 +28,14 @@ public:
         scene.get<Camera>(editorCamera).setPerspectiveProjection(45, 1200.f/800.f, 0.001, 100);
 
         light = scene.newEntity();
-        scene.assign<gfx::Model>(light).loadModelFromPath("../assets/cube.obj");
+        scene.assign<gfx::Model>(light).loadModelFromPath("../assets/cube.obj", false);
         scene.assign<Transform>(light).scale = {.01, .01, .01};
         scene.assign<Light>(light);
         
         auto model = scene.newEntity();
-        scene.assign<gfx::Model>(model).loadModelFromPath("../assets/flat_vase.obj");
-        scene.assign<Transform>(model).rotation = {glm::pi<float>(), 0, 0};
+        scene.assign<gfx::Model>(model).loadModelFromPath("../assets/backpack/backpack.obj");
+        scene.assign<Transform>(model).rotation = {0, glm::pi<float>(), 0};
+        scene.get<Transform>(model).translation = {0, 0, 2};
         scene.assign<Object>(model);
     }
     ~Editor()

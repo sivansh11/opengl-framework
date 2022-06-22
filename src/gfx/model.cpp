@@ -24,8 +24,9 @@ void Model::free()
         mesh.free();
     }
 }
-void Model::loadModelFromPath(std::string filePath)
+void Model::loadModelFromPath(std::string filePath, bool defaultTextures)
 {
+    Model::defaultTextures = defaultTextures;
     Assimp::Importer importer;
     const aiScene *scene = importer.ReadFile(filePath,
         aiProcess_Triangulate |
@@ -123,19 +124,19 @@ std::vector<Texture2D> Model::loadMaterialTextures(aiMaterial *mat, aiTextureTyp
 {
     std::vector<Texture2D> textures;
     
-    // if (mat->GetTextureCount(type) == 0)
-    // {
-    //     std::vector<Texture2D> tex;
-    //     Texture2D emptyTex;
-    //     unsigned char *data = new unsigned char[4];
-    //     for (int i = 0; i < 4; i++)
-    //     {
-    //         data[i] = 255;
-    //     } 
-    //     emptyTex.load(1, 1, data, GL_RGBA, typeName);
-    //     tex.push_back(emptyTex);
-    //     return tex;
-    // }
+    if (mat->GetTextureCount(type) == 0 && defaultTextures)
+    {
+        std::vector<Texture2D> tex;
+        Texture2D emptyTex;
+        unsigned char *data = new unsigned char[4];
+        for (int i = 0; i < 4; i++)
+        {
+            data[i] = 255;
+        } 
+        emptyTex.load(1, 1, data, GL_RGBA, typeName);
+        tex.push_back(emptyTex);
+        return tex;
+    }
 
     for (unsigned int i = 0; i < mat->GetTextureCount(type); i++)
     {

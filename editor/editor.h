@@ -29,7 +29,8 @@ public:
 
         light = scene.newEntity();
         scene.assign<gfx::Model>(light).loadModelFromPath("../assets/cube.obj", false);
-        scene.assign<Transform>(light).scale = {.01, .01, .01};
+        scene.assign<Transform>(light).scale = {.05, .05, .05};
+        scene.get<Transform>(light).translation = {0, 5, 2};
         scene.assign<Light>(light);
         
         model = scene.newEntity();

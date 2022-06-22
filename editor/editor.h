@@ -33,8 +33,8 @@ public:
         scene.assign<Light>(light);
         
         auto model = scene.newEntity();
-        scene.assign<gfx::Model>(model).loadModelFromPath("../assets/backpack/backpack.obj");
-        scene.assign<Transform>(model).rotation = {0, glm::pi<float>(), 0};
+        scene.assign<gfx::Model>(model).loadModelFromPath("../assets/glTF/Sponza.gltf");
+        scene.assign<Transform>(model).scale = {.01, .01, .01};
         scene.get<Transform>(model).translation = {0, 0, 2};
         scene.assign<Object>(model);
     }
@@ -61,7 +61,7 @@ public:
 
     void render()
     {
-        glCall(glClearColor(0,0,0,1));
+        glCall(glClearColor(121, 210, 247, 1));
         glCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
         glCall(glEnable(GL_DEPTH_TEST));
 

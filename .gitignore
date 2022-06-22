@@ -12,6 +12,8 @@ _deps
 
 /build/
 
+/assets/Main/
+
 # Prerequisites
 *.d
 

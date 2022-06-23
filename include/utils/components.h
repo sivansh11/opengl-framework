@@ -1,8 +1,6 @@
 #ifndef COMPONENTS_H
 #define COMPONENTS_H
 
-#include "gfx/mesh.h"
-
 struct Transform
 {
     glm::vec3 translation{0};

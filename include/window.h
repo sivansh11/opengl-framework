@@ -45,7 +45,7 @@ public:
     GLFWwindow* getGLFWwindow() { return window; }
     bool shouldClose() { return glfwWindowShouldClose(window); }
 
-    void size(int &width, int height) { glfwGetWindowSize(window, &width, &height); }
+    void size(int &width, int &height) { glfwGetWindowSize(window, &width, &height); }
 
 private:
     GLFWwindow* window;

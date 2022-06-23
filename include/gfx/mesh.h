@@ -28,7 +28,7 @@ struct Material
     glm::vec3 specular{1};
     float shininess = 32;
 };
-    
+
 class Mesh
 {
 public:

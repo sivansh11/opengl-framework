@@ -1,6 +1,6 @@
 #include "app.h"
 
-#include "editor.h"
+#include "showdowexample.h"
 
 App::App() : window(width, height, title.c_str())
 {

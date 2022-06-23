@@ -52,7 +52,7 @@ public:
     void free();
 
     void bind();
-    void unBind();
+    void unBind(int srcWidth, int srcHeight);
     void bindTexture() { glCall(glBindTexture(GL_TEXTURE_2D, getColorTexture())); }
 
     float width() { return m_spec.width; }

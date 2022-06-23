@@ -25,7 +25,7 @@ void Framebuffer::free()
 void Framebuffer::invalidate()
 {
     glCall(glGenFramebuffers(1, &id));
-    bind();
+    glCall(glBindFramebuffer(GL_FRAMEBUFFER, id));
 
     for (auto type: m_spec.attachments)
     {
@@ -47,6 +47,8 @@ void Framebuffer::invalidate()
             glCall(glGenTextures(1, &textureDepthStencilBuffer));
             glCall(glBindTexture(GL_TEXTURE_2D, textureDepthStencilBuffer));
             glCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, m_spec.width, m_spec.height, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL));
+            glCall(glDrawBuffer(GL_NONE));
+            glCall(glReadBuffer(GL_NONE));
             glCall(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, textureDepthStencilBuffer, 0));
             attachments.push_back(textureDepthStencilBuffer);
             break;
@@ -61,19 +63,14 @@ void Framebuffer::invalidate()
         ASSERT(false, "");
     }
 
-    unBind();
+    glCall(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 }
 void Framebuffer::invalidate(int width, int heigth)
 {
     if (m_spec.width == width && m_spec.height == heigth) return;
     m_spec.width = width;
     m_spec.height = heigth;
-    glCall(glDeleteFramebuffers(1, &id));
-    for (auto tex: attachments)
-    {
-        glCall(glDeleteTextures(1, &tex));
-    }
-    attachments.clear();
+    free();
     invalidate();
 }
 
@@ -86,12 +83,14 @@ void Framebuffer::create(const FramebufferSpecification& spec)
 
 void Framebuffer::bind()
 {
+    glViewport(0, 0, m_spec.width, m_spec.height);
     glCall(glBindFramebuffer(GL_FRAMEBUFFER, id));
 }
 
-void Framebuffer::unBind()
+void Framebuffer::unBind(int srcWidth, int srcHeight)
 {
     glCall(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+    glCall(glViewport(0, 0, srcWidth, srcHeight));
 }
 
 GLuint Framebuffer::getColorTexture()
@@ -105,34 +104,34 @@ GLuint Framebuffer::getColorTexture()
     return attachments[i];
 }
 
-FrameBufferQuad::FrameBufferQuad()
-{
-    vao.bind();
-    vbo.bind();
-    ebo.bind();
-    vbo.load(framebufferVertices, 16 * sizeof(float));
-    vao.linkVertexBuffer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (void*)(0));
-    vao.linkVertexBuffer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (void*)(2 * sizeof(float)));
-    ebo.load(gfx::framebufferIndices, 6 * sizeof(unsigned int));
-    vao.unBind();
-    vbo.unBind();
-    ebo.unBind();
-}
-void FrameBufferQuad::bind()
-{
-    vao.bind();
-    vbo.bind();
-    ebo.bind();
-}
-void FrameBufferQuad::unBind()
-{
-    vao.unBind();
-    vbo.unBind();
-    ebo.unBind();
-}
-void FrameBufferQuad::draw()
-{
-    glCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
-}
+// FrameBufferQuad::FrameBufferQuad()
+// {
+//     vao.bind();
+//     vbo.bind();
+//     ebo.bind();
+//     vbo.load(framebufferVertices, 16 * sizeof(float));
+//     vao.linkVertexBuffer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (void*)(0));
+//     vao.linkVertexBuffer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (void*)(2 * sizeof(float)));
+//     ebo.load(gfx::framebufferIndices, 6 * sizeof(unsigned int));
+//     vao.unBind();
+//     vbo.unBind();
+//     ebo.unBind();
+// }
+// void FrameBufferQuad::bind()
+// {
+//     vao.bind();
+//     vbo.bind();
+//     ebo.bind();
+// }
+// void FrameBufferQuad::unBind()
+// {
+//     vao.unBind();
+//     vbo.unBind();
+//     ebo.unBind();
+// }
+// void FrameBufferQuad::draw()
+// {
+//     glCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
+// }
 
 }

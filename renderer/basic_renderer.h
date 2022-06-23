@@ -94,6 +94,7 @@ private:
 
     gfx::ShaderProgram lightShader{};
     gfx::ShaderProgram shader{};
+    
 
 };
 

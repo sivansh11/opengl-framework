@@ -15,6 +15,8 @@
 #include <assimp/scene.h>           
 #include <assimp/postprocess.h>  
 
+#include "utils/components.h"
+
 namespace gfx
 {
 
@@ -28,13 +30,18 @@ public:
     void free();
     void draw(ShaderProgram shader);
 
-    std::vector<Mesh> meshes;
+    std::vector<Mesh>& getMeshes() { return meshes; }
+
+    Material material{};
+    Transform transform{};
+
 private:
     void processNode(aiNode *node, const aiScene *scene);
     Mesh processMesh(aiMesh *mesh, const aiScene *scene);
     std::vector<Texture2D> loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName);
 
 private:
+    std::vector<Mesh> meshes;
     std::string directory;
     std::vector<Texture2D> texturesLoaded;
     bool defaultTextures;

@@ -115,6 +115,7 @@ public:
     {
         ASSERT(entities[entityID].isValid == true, "entity does not exist");
         ComponentID componentID = getComponentID<T>();
+        ASSERT(entities[entityID].mask.test(componentID) == false, "entity already has component");
         if (componentPools.size() <= componentID)
         {
             componentPools.resize(componentID + 1, nullptr);

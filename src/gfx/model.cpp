@@ -213,7 +213,7 @@ void Model::draw(ShaderProgram shader)
 {
     for (auto &mesh: meshes)
     {
-        mesh.draw(shader);
+        mesh.draw(shader, material, transform);
     }
 }
 

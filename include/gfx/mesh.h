@@ -16,12 +16,14 @@
 #include <glm/gtx/hash.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "utils/components.h"
+
 namespace gfx
 {
 
 struct Material 
 {
-    glm::vec3 ambient{.1};
+    glm::vec3 ambient{1};
     glm::vec3 diffuse{1};
     glm::vec3 specular{1};
     float shininess = 32;
@@ -49,7 +51,7 @@ public:
     ~Mesh();
 
     void load(std::vector<Vertex> &vertices, std::vector<unsigned int> &indices, std::vector<Texture2D> &textures);
-    void draw(ShaderProgram &shader);
+    void draw(ShaderProgram &shader, Material parentMaterial = Material{}, Transform parentTransform = Transform{});
     void free();
 
     std::vector<Texture2D> textures;
@@ -57,6 +59,7 @@ public:
     std::vector<unsigned int> indices;
 
     Material material{};
+    Transform transform;
 
 private:
     void setupMesh();

@@ -29,35 +29,36 @@ public:
 
         light = scene.newEntity();
         scene.assign<gfx::Model>(light).loadModelFromPath("../assets/cube.obj", false);
-        scene.assign<Transform>(light).scale = {.05, .05, .05};
-        scene.get<Transform>(light).translation = {0, 0, 0};
+        scene.get<gfx::Model>(light).transform.scale = {.05, .05, .05};
+        scene.get<gfx::Model>(light).transform.translation = {0, 0, 0};
         scene.assign<Light>(light);
         
+        // model = scene.newEntity();
+        // scene.assign<gfx::Model>(model).loadModelFromPath("../assets/glTF/Sponza.gltf");
+        // scene.get<gfx::Model>(model).getMeshes()[0].material.ambient = glm::vec3{.1};
+        // scene.get<gfx::Model>(model).getMeshes()[0].material.diffuse = glm::vec3{.5};
+        // scene.get<gfx::Model>(model).getMeshes()[0].material.specular = glm::vec3{.5};
+        // scene.get<gfx::Model>(model).getMeshes()[0].material.shininess = 32;
+        // scene.get<gfx::Model>(model).transform.scale = {.01, .01, .01};
+        // scene.get<gfx::Model>(model).transform.translation = {0, 0, 2};
+        // scene.assign<Object>(model);
+
+
         model = scene.newEntity();
-        scene.assign<gfx::Model>(model).loadModelFromPath("../assets/cube.obj", false);
-        scene.assign<Transform>(model).scale = {1, 1, 1};
-        scene.get<gfx::Model>(model).meshes[0].material.ambient = glm::vec3{1};
-        scene.get<gfx::Model>(model).meshes[0].material.diffuse = glm::vec3{0};
-        scene.get<gfx::Model>(model).meshes[0].material.specular = glm::vec3{0};
-        scene.get<Transform>(model).translation = {0, 0, 2};
-        scene.assign<gfx::Material>(model);
+        scene.assign<gfx::Model>(model).loadModelFromPath("../assets/low_poly_tree/Lowpoly_tree_sample.obj", false);
+        scene.get<gfx::Model>(model).transform.translation = {0, 0, 2};
+        scene.get<gfx::Model>(model).transform.scale = {0.1, 0.1, 0.1};
+        scene.assign<Object>(model);
 
-
-        // model = scene.newEntity();
-        // scene.assign<gfx::Model>(model).loadModelFromPath("../assets/low_poly_tree/Lowpoly_tree_sample.obj");
-        // scene.assign<Transform>(model).scale = {.01, .01, .01};
-        // scene.get<Transform>(model).translation = {0, 0, 2};
-        // scene.assign<gfx::Material>(model);
-
-        // model = scene.newEntity();
-        // scene.assign<gfx::Model>(model).loadModelFromPath("../assets/quad.obj");
-        // scene.get<gfx::Model>(model).meshes[0].material.ambient = glm::vec3{1};
-        // scene.get<gfx::Model>(model).meshes[0].material.diffuse = glm::vec3{1};
-        // scene.get<gfx::Model>(model).meshes[0].material.specular = glm::vec3{1};
-        // scene.assign<Transform>(model).scale = {1, 1, 1};
-        // scene.get<Transform>(model).translation = {0, 0, 2};
-        // scene.get<Transform>(model).rotation = {glm::half_pi<float>(), 0, 0};
-        // scene.assign<gfx::Material>(model);
+        model = scene.newEntity();
+        scene.assign<gfx::Model>(model).loadModelFromPath("../assets/quad.obj", false);
+        scene.get<gfx::Model>(model).getMeshes()[0].material.ambient = glm::vec3{1};
+        scene.get<gfx::Model>(model).getMeshes()[0].material.diffuse = glm::vec3{1};
+        scene.get<gfx::Model>(model).getMeshes()[0].material.specular = glm::vec3{1};
+        scene.get<gfx::Model>(model).transform.scale = {1, 1, 1};
+        scene.get<gfx::Model>(model).transform.translation = {0, 0, 2};
+        scene.get<gfx::Model>(model).transform.rotation = {glm::half_pi<float>(), 0, 0};
+        scene.assign<Object>(model);
 
     }
     ~Editor()
@@ -77,7 +78,7 @@ public:
         }
         else
         {
-            controller.moveInPlaneXZ(window.getGLFWwindow(), deltaTime, scene.get<Transform>(light).translation, scene.get<Transform>(light).rotation);
+            controller.moveInPlaneXZ(window.getGLFWwindow(), deltaTime, scene.get<gfx::Model>(light).transform.translation, scene.get<gfx::Model>(light).transform.rotation);
         }
     }
 
@@ -91,13 +92,97 @@ public:
 
         myImGuiStartFrame();
 
-        ImGui::Text("NOTE: PRESS L ALONG WITH AWSD TO MOVE LIGHT");
+        ImGui::Begin("NOTE");
+        ImGui::Text("PRESS L ALONG WITH AWSD TO MOVE LIGHT");
+        ImGui::End();
 
         ImGui::Begin("light");
         ImGui::DragFloat3("ambient", (float*)&scene.get<Light>(light).ambient, .01);
         ImGui::DragFloat3("diffuse", (float*)&scene.get<Light>(light).diffuse, .01);
         ImGui::DragFloat3("specular", (float*)&scene.get<Light>(light).specular, .01);
         ImGui::End();
+
+        static ecs::EntityID selectedEnt;
+        static int selectedIdx;
+        static bool init = false;
+
+        ImGui::Begin("Scene Entities");
+        ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+        if (ImGui::TreeNode("Objects"))
+        {
+            for (auto ent: ecs::SceneView<Object>(scene))
+            {
+                if (ImGui::TreeNode((void*)(ent), "%lld", ent))
+                {
+                    init = true;
+                    selectedEnt = ent;  
+                    if(ImGui::IsItemClicked())
+                    {
+                        selectedIdx = -1;
+                    }
+                    std::vector<std::string> items;
+                    for (int i = 0; i < scene.get<gfx::Model>(ent).getMeshes().size(); i++)
+                    {
+                        items.push_back(std::to_string(i));                        
+                    }
+                    static int item_current_idx = 0; 
+                    for (int i = 0; i < items.size(); i++)
+                    {
+                        const bool is_selected = (item_current_idx == i);
+                        if (ImGui::Selectable(items[i].c_str(), is_selected))
+                        {
+                            item_current_idx = i;
+                            selectedIdx = i;
+                        }
+                        if (is_selected)
+                            ImGui::SetItemDefaultFocus();
+                    }
+                    ImGui::TreePop();
+                }
+            }
+            ImGui::TreePop();
+        }
+        ImGui::End();
+
+        ImGui::Begin("Entity Data");
+        if (init)
+        {
+            if (selectedIdx >= 0)
+            {
+                // mesh
+                ImGui::Text("Material");
+                gfx::Material &mat = scene.get<gfx::Model>(selectedEnt).getMeshes()[selectedIdx].material;
+                ImGui::DragFloat3("ambient", (float*)(&mat.ambient), 0.01);
+                ImGui::DragFloat3("diffuse", (float*)(&mat.diffuse), 0.01);
+                ImGui::DragFloat3("specular", (float*)(&mat.specular), 0.01);
+                ImGui::DragFloat("shininess", &mat.shininess, 1, 1, 64);
+                ImGui::Text("Transform");
+                Transform &transform = scene.get<gfx::Model>(selectedEnt).getMeshes()[selectedIdx].transform; 
+                ImGui::DragFloat3("translation", (float*)(&transform.translation), 0.01);
+                ImGui::DragFloat3("scale", (float*)(&transform.scale), 0.01);
+                ImGui::DragFloat3("rotation", (float*)(&transform.rotation), 0.01);
+            }
+            else
+            {   
+                // model
+                ImGui::Text("Material");
+                gfx::Material &mat = scene.get<gfx::Model>(selectedEnt).material;
+                ImGui::DragFloat3("ambient", (float*)(&mat.ambient), 0.01);
+                ImGui::DragFloat3("diffuse", (float*)(&mat.diffuse), 0.01);
+                ImGui::DragFloat3("specular", (float*)(&mat.specular), 0.01);
+                ImGui::DragFloat("shininess", &mat.shininess, 1, 1, 64);
+                ImGui::Text("Transform");
+                Transform &transform = scene.get<gfx::Model>(selectedEnt).transform; 
+                ImGui::DragFloat3("translation", (float*)(&transform.translation), 0.01);
+                ImGui::DragFloat3("scale", (float*)(&transform.scale), 0.01);
+                ImGui::DragFloat3("rotation", (float*)(&transform.rotation), 0.01);
+
+            }
+
+        }
+        ImGui::End();
+
+        // ImGui::ShowDemoWindow();
 
         renderer.imguiRender();
 

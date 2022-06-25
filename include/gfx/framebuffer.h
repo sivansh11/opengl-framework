@@ -1,5 +1,5 @@
-#ifndef FRAMEBUFFER_H
-#define FRAMEBUFFER_H
+#ifndef FRAME_BUFFER_H 
+#define FRAME_BUFFER_H
 
 #include "core.h"
 
@@ -11,6 +11,7 @@
 
 namespace gfx
 {
+
 static GLfloat framebufferVertices[] = 
 {
     -1.0f, -1.0f, 0.0f, 0.0f,
@@ -25,45 +26,37 @@ static GLuint framebufferIndices[] =
     0, 3, 2
 };
 
-enum Attachments
+enum FrameBufferType
 {
-    Color,
-    DepthStencil
+    COLOR,
+    DEPTH,
+    COLORDEPTH
 };
 
-struct FramebufferSpecification
+class FrameBuffer
 {
-    uint32_t width, height;
-    bool swapChainTarget = false;
-    std::vector<Attachments> attachments;
-};
-
-
-class Framebuffer
-{
+    struct Attachment
+    {
+        GLuint id;
+        FrameBufferType type;
+    };
 public:
-    Framebuffer() {}
-    Framebuffer(const FramebufferSpecification& spec);
-    ~Framebuffer();
-    void create(const FramebufferSpecification& spec);
+    FrameBuffer();
+    ~FrameBuffer();
 
-    void invalidate();
-    void invalidate(int width, int height);
+    void init(int width, int height, FrameBufferType type = FrameBufferType::COLORDEPTH);
     void free();
-
     void bind();
     void unBind(int srcWidth, int srcHeight);
-    void bindTexture() { glCall(glBindTexture(GL_TEXTURE_2D, getColorTexture())); }
 
-    float width() { return m_spec.width; }
-    float height() { return m_spec.height; }
+    void bindTextureAttachment(FrameBufferType type, int unit);
+    GLuint getTextureAttachment(FrameBufferType type);
 
-    GLuint getColorTexture();
-    
 private:
-    FramebufferSpecification m_spec;
-    std::vector<GLuint> attachments;
-    GLuint id;
+    GLuint id{};
+    int width, height;
+    FrameBufferType type;
+    std::vector<Attachment> attachments;
 };
 
 class FrameBufferQuad
@@ -81,6 +74,8 @@ private:
     ElementBuffer ebo;
 };
 
-}
+} // namespace gfx
+
 
 #endif
+

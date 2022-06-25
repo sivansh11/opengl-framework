@@ -5,19 +5,26 @@
 
 namespace gfx
 {
-    ShaderProgram::Shader::Shader(const char *shaderPath) : shaderPath(shaderPath)
+    ShaderProgram::Shader::Shader(const char *shaderPath)
     {
-        compileShader();
+        compileShader(shaderPath);
     }
-    void ShaderProgram::Shader::compileShader()
+    ShaderProgram::Shader::Shader(std::string shaderCode, ShaderType type)
+    {
+        compileShader(shaderCode, type);
+    }
+    void ShaderProgram::Shader::compileShader(const char *shaderPath)
     {
         std::string shaderFile = read_file(shaderPath);
+        ShaderProgram::Shader::shaderCode = shaderFile;
         
         std::string shaderPathString = shaderPath;
 
         GLenum type;
 
-        if (shaderPathString.find(".vert") != std::string::npos) type = GL_VERTEX_SHADER;
+        if (shaderPathString.find(".vert") != std::string::npos)
+        
+        type = GL_VERTEX_SHADER;
         else if (shaderPathString.find(".frag") != std::string::npos) type = GL_FRAGMENT_SHADER;
         else if (shaderPathString.find(".geom") != std::string::npos) type = GL_GEOMETRY_SHADER;
         else if (shaderPathString.find(".comp") != std::string::npos) type = GL_COMPUTE_SHADER;
@@ -36,6 +43,65 @@ namespace gfx
         if (!success) 
         {
             std::cout << "File name:" << shaderPath << '\n';
+            printShaderInfoLog();
+            std::__throw_runtime_error("Shader not compiled!");
+        }
+    }
+    void ShaderProgram::Shader::compileShader(std::string shaderCode, ShaderType type_)
+    {
+        std::string shaderFile = shaderCode;
+        ShaderProgram::Shader::shaderCode = shaderCode;
+
+        GLenum type;
+
+        if (type_ == VERTEX) type = GL_VERTEX_SHADER;
+        else if (type_ == FRAGMENT) type = GL_FRAGMENT_SHADER;
+        else if (type_ == GEOMETRY) type = GL_GEOMETRY_SHADER;
+        else if (type_ == COMPUTE) type = GL_COMPUTE_SHADER;
+
+        ShaderProgram::Shader::type = type_;
+
+        id = glCall(glCreateShader(type));
+
+        char const* shaderCode_ = shaderFile.c_str();
+
+        glCall(glShaderSource(id, 1, &shaderCode_, NULL));
+
+        glCall(glCompileShader(id));
+
+        int success;
+        glCall(glGetShaderiv(id, GL_COMPILE_STATUS, &success));
+
+        if (!success) 
+        {
+            // std::cout << "File name:" << shaderPath << '\n';
+            printShaderInfoLog();
+            std::__throw_runtime_error("Shader not compiled!");
+        }
+    }
+    void ShaderProgram::Shader::compileShader()
+    {
+        GLenum type;
+
+        if (ShaderProgram::Shader::type == VERTEX) type = GL_VERTEX_SHADER;
+        else if (ShaderProgram::Shader::type == FRAGMENT) type = GL_FRAGMENT_SHADER;
+        else if (ShaderProgram::Shader::type == GEOMETRY) type = GL_GEOMETRY_SHADER;
+        else if (ShaderProgram::Shader::type == COMPUTE) type = GL_COMPUTE_SHADER;
+
+        id = glCall(glCreateShader(type));
+
+        char const* shaderCode_ = shaderCode.c_str();
+
+        glCall(glShaderSource(id, 1, &shaderCode_, NULL));
+
+        glCall(glCompileShader(id));
+
+        int success;
+        glCall(glGetShaderiv(id, GL_COMPILE_STATUS, &success));
+
+        if (!success) 
+        {
+            // std::cout << "File name:" << shaderPath << '\n';
             printShaderInfoLog();
             std::__throw_runtime_error("Shader not compiled!");
         }
@@ -83,6 +149,13 @@ namespace gfx
         shaders.push_back(shader);
         glCall(glAttachShader(id, shader.id));
     }
+    void ShaderProgram::attachShader(std::string shaderCode, ShaderType type)
+    {
+        Shader shader(shaderCode, type);
+        shaders.push_back(shader);
+        glCall(glAttachShader(id, shader.id));
+    }
+
     void ShaderProgram::link()
     {
         glCall(glLinkProgram(id));
@@ -122,7 +195,7 @@ namespace gfx
     int ShaderProgram::uniformLoc(const char* uniformName)
     {
         int val = glCall(glGetUniformLocation(id, uniformName));
-        ASSERT(val != -1, (std::string("uniform not there in shader: ") + shaders[0].shaderPath + "\nuniform name is " + uniformName));
+        ASSERT(val != -1, (std::string("uniform not there in shader") + "\nuniform name is " + uniformName));
         return val;
     }
     void ShaderProgram::Mat4f(const char* uniformName, const float *valuePointer, GLboolean transpose)

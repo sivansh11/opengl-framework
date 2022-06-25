@@ -10,7 +10,7 @@ namespace gfx
     }
     ElementBuffer::~ElementBuffer()
     {
-
+        free();
     }
     void ElementBuffer::free()
     {

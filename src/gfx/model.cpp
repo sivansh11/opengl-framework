@@ -16,7 +16,8 @@ Model::Model()
 Model::~Model()
 {
 
-}
+}   
+
 void Model::free()
 {
     for (auto &mesh: meshes)
@@ -24,13 +25,12 @@ void Model::free()
         mesh.free();
     }
 }
-void Model::loadModelFromPath(std::string filePath, bool defaultTextures)
+void Model::loadModelFromPath(std::string filePath)
 {
-    Model::defaultTextures = defaultTextures;
     Assimp::Importer importer;
     const aiScene *scene = importer.ReadFile(filePath,
         aiProcess_Triangulate |
-        aiProcess_FlipUVs     |
+        // aiProcess_FlipUVs     |
         aiProcess_GenNormals
     );    
 
@@ -39,29 +39,45 @@ void Model::loadModelFromPath(std::string filePath, bool defaultTextures)
         ASSERT(false, std::string("Assimp Error\n") + importer.GetErrorString());
     }
     directory = filePath.substr(0, filePath.find_last_of('/'));
-    processNode(scene->mRootNode, scene);
+    aiMatrix4x4 transform{};
+    processNode(scene->mRootNode, scene, transform);
     DEBUGMESSAGE((std::to_string(meshes.size()) + " Meshes and " + std::to_string(texturesLoaded.size()) + " Textures").c_str());
 }
 
-void Model::processNode(aiNode *node, const aiScene *scene)
+// void Model::processNode(aiNode *node, const aiScene *scene)
+// {
+//     for (unsigned int i = 0; i < node->mNumChildren; i++)
+//     {
+//         processNode(node->mChildren[i], scene, transform);
+//     }
+
+//     for (unsigned int i = 0; i < node->mNumMeshes; i++)
+//     {
+//         aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
+//         meshes.push_back(processMesh(mesh, scene, transform));
+//     }
+// }
+
+void Model::processNode(aiNode *node, const aiScene *scene, aiMatrix4x4 &transform)
 {
-    for (unsigned int i = 0; i < node->mNumMeshes; i++)
-    {
-        aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
-        meshes.push_back(processMesh(mesh, scene));
-    }
+    aiMatrix4x4 localTransform = transform * node->mTransformation;
 
     for (unsigned int i = 0; i < node->mNumChildren; i++)
     {
-        processNode(node->mChildren[i], scene);
+        processNode(node->mChildren[i], scene, localTransform);
+    }
+
+    for (unsigned int i = 0; i < node->mNumMeshes; i++)
+    {
+        aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
+        meshes.push_back(processMesh(mesh, scene, localTransform));
     }
 }
 
-Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
+Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene, aiMatrix4x4 &transform)
 {
     std::vector<Mesh::Vertex> vertices;
     std::vector<unsigned int> indices;
-    std::vector<Texture2D> textures;
 
     for (unsigned int i = 0; i < mesh->mNumVertices; i++)
     {
@@ -89,8 +105,8 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
             vertex.uv = vec;
 
             // tangent
-
             // bitangent
+            // if (mesh->HasTangentsAndBitangents())
         }
         else
         {
@@ -111,102 +127,101 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
 
     aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
 
-    std::vector<Texture2D> diffMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "diffuse");
-    textures.insert(textures.end(), diffMaps.begin(), diffMaps.end());
+    std::shared_ptr<Texture2D> diffMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "diffuse");
 
-    std::vector<Texture2D> specMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "specular");
-    textures.insert(textures.end(), specMaps.begin(), specMaps.end());
+    std::shared_ptr<Texture2D> specMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "specular");
 
-    std::vector<Texture2D> normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "normal");
-    textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
+    std::shared_ptr<Texture2D> normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "normal");
 
-    Mesh mesh_(vertices, indices, textures);
+    // Mesh mesh_(vertices, indices, textures);
+    Material meshMaterial;
     aiColor4D color;
     if (AI_SUCCESS == aiGetMaterialColor(material, AI_MATKEY_COLOR_AMBIENT, &color))
     {
-        mesh_.material.ambient.r = color.r;   
-        mesh_.material.ambient.g = color.g;   
-        mesh_.material.ambient.b = color.b;   
+        meshMaterial.ambient.r = color.r;   
+        meshMaterial.ambient.g = color.g;   
+        meshMaterial.ambient.b = color.b;   
+        if (diffMaps != nullptr)
+        {
+            meshMaterial.diffuseMap = diffMaps;
+        }
     }
     else
     {
-        mesh_.material.ambient = {1, 1, 1};
+        meshMaterial.ambient = {1, 1, 1};
     }
     if (AI_SUCCESS == aiGetMaterialColor(material, AI_MATKEY_COLOR_DIFFUSE, &color))
     {
-        mesh_.material.diffuse.r = color.r;   
-        mesh_.material.diffuse.g = color.g;   
-        mesh_.material.diffuse.b = color.b;   
+        meshMaterial.diffuse.r = color.r;   
+        meshMaterial.diffuse.g = color.g;   
+        meshMaterial.diffuse.b = color.b;   
+        if (diffMaps != nullptr)
+        {
+            meshMaterial.diffuseMap = diffMaps;
+        }
     }
     else
     {
-        mesh_.material.diffuse = {1, 1, 1};
+        meshMaterial.diffuse = {1, 1, 1};
     }
     if (AI_SUCCESS == aiGetMaterialColor(material, AI_MATKEY_COLOR_SPECULAR, &color))
     {
-        mesh_.material.specular.r = color.r;   
-        mesh_.material.specular.g = color.g;   
-        mesh_.material.specular.b = color.b;   
+        meshMaterial.specular.r = color.r;   
+        meshMaterial.specular.g = color.g;   
+        meshMaterial.specular.b = color.b; 
+        if (specMaps != nullptr)
+        {
+            meshMaterial.diffuseMap = specMaps;
+        }  
     }
     else
     {
-        mesh_.material.specular = {1, 1, 1};  
+        meshMaterial.specular = {1, 1, 1};  
     }
     float shininess;
     if (AI_SUCCESS == aiGetMaterialFloat(material, AI_MATKEY_SHININESS, &shininess))
     {
-         mesh_.material.shininess = shininess;
+         meshMaterial.shininess = shininess;
     }
     else
     {
-         mesh_.material.shininess = 32;
+         meshMaterial.shininess = 32;
     }
-
+    Mesh mesh_(vertices, indices, meshMaterial);
+    transform.Decompose(*(aiVector3D*)(&mesh_.transform.scale), *(aiVector3D*)(&mesh_.transform.rotation), *(aiVector3D*)(&mesh_.transform.translation));
     return mesh_;
 }
 
-std::vector<Texture2D> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName)
+std::shared_ptr<Texture2D> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName)
 {
-    std::vector<Texture2D> textures;
-    
-    if (mat->GetTextureCount(type) == 0 && defaultTextures && typeName != "normal")
-    {
-        std::vector<Texture2D> tex;
-        Texture2D emptyTex;
-        unsigned char *data = new unsigned char[4];
-        for (int i = 0; i < 4; i++)
-        {
-            data[i] = 255;
-        } 
-        emptyTex.load(1, 1, data, GL_RGBA, typeName);
-        tex.push_back(emptyTex);
-        return tex;
-    }
+    if (mat->GetTextureCount(type) == 0) return nullptr;
+
+    // if (mat->GetTextureCount(type) == 0 && defaultTextures)
+    // {
+    //     unsigned char *data = new unsigned char[4];
+    //     for (int i = 0 ; i < 4; i++)
+    //         data[i] = 255;
+    //     std::shared_ptr<Texture2D> tex = std::make_shared<Texture2D>();
+    //     tex->load(1, 1, data, GL_RGBA, typeName);
+    //     delete[] data;
+    //     return tex;
+    // }
+    std::shared_ptr<Texture2D> texture = std::make_shared<Texture2D>();
 
     for (unsigned int i = 0; i < mat->GetTextureCount(type); i++)
     {
         aiString str;
         mat->GetTexture(type, i, &str);
-        bool skip = false;
-        for (unsigned int j = 0; j < texturesLoaded.size(); j++)
+        if (texturesLoaded.find(str.C_Str()) != texturesLoaded.end())
         {
-            if (std::strcmp(texturesLoaded[j].path.data(), str.C_Str()) == 0)
-            {
-                textures.push_back(texturesLoaded[j]);
-                skip = true;
-                break;
-            }
+            return texturesLoaded.at(str.C_Str());
         }
-        if (!skip)
-        {
-            Texture2D texture;
-            texture.load((directory + '/' + str.C_Str()).c_str(), typeName);
-            texture.path = str.C_Str();
-            textures.push_back(texture);
-            texturesLoaded.push_back(texture);
-        }
+        texture->load((directory + '/' + str.C_Str()).c_str(), typeName);
+        texture->path = str.C_Str();
+        texturesLoaded[str.C_Str()] = texture;
     }
-    return textures;
+
+    return texture;
 }
 
 void Model::draw(ShaderProgram shader)

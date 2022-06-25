@@ -26,7 +26,7 @@ public:
     Model();
     ~Model();
     
-    void loadModelFromPath(std::string filePath, bool defaultTextures = true);
+    void loadModelFromPath(std::string filePath);
     void free();
     void draw(ShaderProgram shader);
 
@@ -35,16 +35,18 @@ public:
     Material material{};
     Transform transform{};
 
+    bool defaultTextures = true;
+
 private:
-    void processNode(aiNode *node, const aiScene *scene);
-    Mesh processMesh(aiMesh *mesh, const aiScene *scene);
-    std::vector<Texture2D> loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName);
+    // void processNode(aiNode *node, const aiScene *scene);
+    void processNode(aiNode *node, const aiScene *scene, aiMatrix4x4 &transform);
+    Mesh processMesh(aiMesh *mesh, const aiScene *scene, aiMatrix4x4 &transform);
+    std::shared_ptr<Texture2D> loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName);
 
 private:
     std::vector<Mesh> meshes;
     std::string directory;
-    std::vector<Texture2D> texturesLoaded;
-    bool defaultTextures;
+    std::unordered_map<std::string, std::shared_ptr<Texture2D>> texturesLoaded;
 };
 
 } // namespace gfx

@@ -27,6 +27,21 @@ struct Material
     glm::vec3 diffuse{1};
     glm::vec3 specular{1};
     float shininess = 32;
+    std::shared_ptr<Texture2D> diffuseMap{};
+    std::shared_ptr<Texture2D> specularMap{};
+    std::shared_ptr<Texture2D> normalMap{};
+    bool hasDiffuseMap()
+    {
+        return diffuseMap != nullptr;
+    }
+    bool hasSpecularMap()
+    {
+        return specularMap != nullptr;
+    }
+    bool hasNormalMap()
+    {
+        return normalMap != nullptr;
+    }
 };
 
 class Mesh
@@ -47,19 +62,20 @@ public:
     };
 
     Mesh();
-    Mesh(std::vector<Vertex> &vertices, std::vector<unsigned int> &indices, std::vector<Texture2D> &textures);
+    Mesh(std::vector<Vertex> &vertices, std::vector<unsigned int> &indices, Material &material);
     ~Mesh();
 
-    void load(std::vector<Vertex> &vertices, std::vector<unsigned int> &indices, std::vector<Texture2D> &textures);
-    void draw(ShaderProgram &shader, Material parentMaterial = Material{}, Transform parentTransform = Transform{});
+    void load(std::vector<Vertex> &vertices, std::vector<unsigned int> &indices, Material &material);
+    void draw(ShaderProgram &shader, Material &parentMaterial, Transform &parentTransform);
     void free();
 
-    std::vector<Texture2D> textures;
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
 
     Material material{};
-    Transform transform;
+    Transform transform{};
+
+    bool hasMaterial = true;
 
 private:
     void setupMesh();

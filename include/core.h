@@ -20,6 +20,8 @@
 #include <functional>
 #include <unordered_map>
 #include <cassert>
+#include <sstream>
+#include <algorithm>
 
 #include "debug.h"
 #include "clock.h"

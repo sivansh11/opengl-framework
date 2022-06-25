@@ -7,24 +7,36 @@
 
 namespace gfx
 {
+    enum ShaderType
+        {
+            VERTEX,
+            FRAGMENT,
+            COMPUTE,
+            GEOMETRY
+        };
     class ShaderProgram
     {
         class Shader
         {
         public:
             Shader(const char *shaderPath);
+            Shader(std::string shaderCode, ShaderType type);
+            void compileShader(const char *shaderPath);
+            void compileShader(std::string shaderCode, ShaderType type);
             void compileShader();
             void printShaderInfoLog();
             void free();
             GLuint id;
-            const char *shaderPath;
         private:
+            std::string shaderCode;
+            ShaderType type;
         };
 
     public:
         ShaderProgram();
         ~ShaderProgram();
         void attachShader(const char *shaderPath);
+        void attachShader(std::string shaderCode, ShaderType type);
         void link();
         void free();
         void reload();

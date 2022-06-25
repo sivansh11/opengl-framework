@@ -10,7 +10,7 @@ namespace gfx
     }
     VertexBuffer::~VertexBuffer()
     {
-        
+        free();
     }
     void VertexBuffer::free()
     {

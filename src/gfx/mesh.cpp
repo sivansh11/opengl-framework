@@ -10,17 +10,17 @@ Mesh::Mesh()
 }
 Mesh::~Mesh()
 {
-    
+
 }
 
-Mesh::Mesh(std::vector<Vertex> &vertices, std::vector<unsigned int> &indices, std::vector<Texture2D> &textures)
+Mesh::Mesh(std::vector<Vertex> &vertices, std::vector<unsigned int> &indices, Material &material)
 {
-    load(vertices, indices, textures);
+    load(vertices, indices, material);
 }
 
-void Mesh::load(std::vector<Vertex> &vertices, std::vector<unsigned int> &indices, std::vector<Texture2D> &textures)
+void Mesh::load(std::vector<Vertex> &vertices, std::vector<unsigned int> &indices, Material &material)
 {
-    Mesh::textures = textures;
+    Mesh::material = material;
     Mesh::vertices = vertices;
     Mesh::indices = indices;
     setupMesh();
@@ -28,10 +28,6 @@ void Mesh::load(std::vector<Vertex> &vertices, std::vector<unsigned int> &indice
 
 void Mesh::free()
 {
-    for (auto &texture: textures)
-    {
-        texture.free();
-    }
     glCall(glDeleteBuffers(1, &VBO));
     glCall(glDeleteBuffers(1, &EBO));
     glCall(glDeleteVertexArrays(1, &VAO));
@@ -64,37 +60,48 @@ void Mesh::setupMesh()
     glCall(glBindVertexArray(0));
 }
 
-void Mesh::draw(ShaderProgram &shader, Material parentMaterial, Transform parentTransform)
+void Mesh::draw(ShaderProgram &shader, Material &parentMaterial, Transform &parentTransform)
 {
-    unsigned int diffN = 1;
-    unsigned int specN = 1;
-    unsigned int normN = 1;
-
-    for (unsigned int i = 0; i < textures.size(); i++)
+    if (hasMaterial)
     {
-        std::string number;
-        std::string name = textures[i].type;
-        if (name == "diffuse")
+        int i = 0;
+        if (material.hasDiffuseMap())
         {
-            number = std::to_string(diffN++);
+            material.diffuseMap->bind(i);
+            shader.veci("material.diffuseMap", i++);
+            shader.veci("material.hasDiffuseMap", true);
         }
-        else if (name == "specular")
+        else
         {
-            number = std::to_string(specN++);
+            shader.veci("material.hasDiffuseMap", false);
         }
-        else if (name == "normal")
+        if (material.hasSpecularMap())
         {
-            number = std::to_string(normN++);
+            material.specularMap->bind(i);
+            shader.veci("material.specularMap", i++);
+            shader.veci("material.hasSpecularMap", true);
         }
-        textures[i].bind(i);
-        shader.veci((name + number).c_str(), i);
+        else
+        {
+            shader.veci("material.hasSpecularMap", false);
+        }
+        if (material.hasNormalMap())
+        {
+            material.normalMap->bind(i);
+            shader.veci("material.normalMap", i++);
+            shader.veci("material.hasNormalMap", true);
+        }
+        else
+        {
+            shader.veci("material.hasNormalMap", false);
+        }
+    
+        shader.vec3f("material.ambient", glm::value_ptr(material.ambient * parentMaterial.ambient));
+        shader.vec3f("material.diffuse", glm::value_ptr(material.diffuse * parentMaterial.diffuse));
+        shader.vec3f("material.specular", glm::value_ptr(material.specular * parentMaterial.specular));
+        shader.vecf("material.shininess", (material.shininess + parentMaterial.shininess) / 2);
     }
     shader.Mat4f("model", glm::value_ptr(parentTransform.mat4() * transform.mat4()));
-    shader.vec3f("material.ambient", glm::value_ptr(material.ambient * parentMaterial.ambient));
-    shader.vec3f("material.diffuse", glm::value_ptr(material.diffuse * parentMaterial.diffuse));
-    shader.vec3f("material.specular", glm::value_ptr(material.specular * parentMaterial.specular));
-    shader.vecf("material.shininess", (material.shininess + parentMaterial.shininess) / 2);
-    
     glCall(glBindVertexArray(VAO));
     glCall(glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0));
     glCall(glBindVertexArray(0));

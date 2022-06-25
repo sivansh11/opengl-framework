@@ -8,7 +8,7 @@ namespace gfx
     }
     VertexArray::~VertexArray()
     {
-
+        free();
     }
     void VertexArray::free()
     {

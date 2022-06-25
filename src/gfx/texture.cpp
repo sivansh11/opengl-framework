@@ -55,7 +55,7 @@ namespace gfx
     }
     Texture2D::~Texture2D()
     {
-
+        free();
     }
     void Texture2D::free()
     {

@@ -3,135 +3,141 @@
 
 namespace gfx
 {
-Framebuffer::Framebuffer(const FramebufferSpecification& spec) : m_spec(spec)
-{
 
-}
-Framebuffer::~Framebuffer()
+FrameBuffer::FrameBuffer()
 {
     
+}    
+FrameBuffer::~FrameBuffer()
+{
+
 }
 
-void Framebuffer::free()
+void FrameBuffer::init(int width, int height, FrameBufferType type)
 {
-    glCall(glDeleteFramebuffers(1, &id));
-    for (auto tex: attachments)
-    {
-        glCall(glDeleteTextures(1, &tex));
-    }
-    attachments.clear();
-}
+    ASSERT(id == 0, "framebuffer already initialized");
+    FrameBuffer::width = width;
+    FrameBuffer::height = height;
+    FrameBuffer::type = type;
 
-void Framebuffer::invalidate()
-{
     glCall(glGenFramebuffers(1, &id));
     glCall(glBindFramebuffer(GL_FRAMEBUFFER, id));
 
-    for (auto type: m_spec.attachments)
+    switch (type)
     {
-        switch (type)
-        {
-        case Attachments::Color:
-            GLuint textureColorBuffer;
-            glCall(glGenTextures(1, &textureColorBuffer));
-            glCall(glBindTexture(GL_TEXTURE_2D, textureColorBuffer));
-            glCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_spec.width, m_spec.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL));
-            glCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
-            glCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-            glCall(glBindTexture(GL_TEXTURE_2D, 0));
-            glCall(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorBuffer, 0));
-            attachments.push_back(textureColorBuffer);
-            break;
-        case Attachments::DepthStencil:
-            GLuint textureDepthStencilBuffer;
-            glCall(glGenTextures(1, &textureDepthStencilBuffer));
-            glCall(glBindTexture(GL_TEXTURE_2D, textureDepthStencilBuffer));
-            glCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, m_spec.width, m_spec.height, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL));
-            glCall(glDrawBuffer(GL_NONE));
-            glCall(glReadBuffer(GL_NONE));
-            glCall(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, textureDepthStencilBuffer, 0));
-            attachments.push_back(textureDepthStencilBuffer);
-            break;
-        default:
-            break;
-        }
+    case FrameBufferType::COLORDEPTH:
+        // color
+        GLuint colorTexture;
+        glCall(glGenTextures(1, &colorTexture));
+        glCall(glBindTexture(GL_TEXTURE_2D, colorTexture));
+        glCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+        glCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));  
+        glCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr));
+        glCall(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTexture, 0));
+        attachments.push_back(Attachment{colorTexture, FrameBufferType::COLOR});
+        // depthStencil
+        GLuint depthStencil;
+        glCall(glGenTextures(1, &depthStencil));
+        glCall(glBindTexture(GL_TEXTURE_2D, depthStencil));
+        glCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+        glCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));  
+        glCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, width, height, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, nullptr));
+        glCall(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, depthStencil, 0));
+        attachments.push_back(Attachment{depthStencil, FrameBufferType::DEPTH});
+        
+        break;
+    case FrameBufferType::DEPTH:
+        GLuint depthTexture;
+        glCall(glGenTextures(1, &depthTexture));
+        glCall(glBindTexture(GL_TEXTURE_2D, depthTexture));
+        glCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr));
+        glCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
+        glCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
+        glCall(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0));
+        glCall(glDrawBuffer(GL_NONE));
+        glCall(glReadBuffer(GL_NONE));
+        attachments.push_back(Attachment{depthTexture, FrameBufferType::DEPTH});
+
+    default:
+        break;
     }
 
-    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    auto fboStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (fboStatus != GL_FRAMEBUFFER_COMPLETE)
     {
-        std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+        std::cout << "Framebuffer not complete: " << fboStatus << std::endl;
         ASSERT(false, "");
     }
-
     glCall(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 }
-void Framebuffer::invalidate(int width, int heigth)
+
+void FrameBuffer::bindTextureAttachment(FrameBufferType type, int unit)
 {
-    if (m_spec.width == width && m_spec.height == heigth) return;
-    m_spec.width = width;
-    m_spec.height = heigth;
-    free();
-    invalidate();
+    for (auto attachment: attachments)
+    {
+        if (attachment.type != type) continue;
+        glCall(glActiveTexture(GL_TEXTURE0 + unit));
+        glCall(glBindTexture(GL_TEXTURE_2D, attachment.id));
+        return;
+    }
+    ASSERT(false, "attachment not in framebuffer");
+}
+GLuint FrameBuffer::getTextureAttachment(FrameBufferType type)
+{
+    for (auto attachment: attachments)
+    {
+        if (attachment.type != type) continue;
+        return attachment.id;
+    }
+    ASSERT(false, "attachment not in framebuffer");
 }
 
-void Framebuffer::create(const FramebufferSpecification& spec)
+void FrameBuffer::free()
 {
-    m_spec = spec;
-    invalidate();
+    glCall(glDeleteFramebuffers(1, &id));
 }
 
-
-void Framebuffer::bind()
+void FrameBuffer::bind()
 {
-    glViewport(0, 0, m_spec.width, m_spec.height);
     glCall(glBindFramebuffer(GL_FRAMEBUFFER, id));
+    glCall(glViewport(0, 0, width, height));
 }
-
-void Framebuffer::unBind(int srcWidth, int srcHeight)
+void FrameBuffer::unBind(int srcWidth, int srcHeight)
 {
     glCall(glBindFramebuffer(GL_FRAMEBUFFER, 0));
     glCall(glViewport(0, 0, srcWidth, srcHeight));
 }
 
-GLuint Framebuffer::getColorTexture()
+
+
+FrameBufferQuad::FrameBufferQuad()
 {
-    int i=0;
-    for (auto type: m_spec.attachments)
-    {
-        if (type == Attachments::Color) break;
-        i++;
-    }
-    return attachments[i];
+    vao.bind();
+    vbo.bind();
+    ebo.bind();
+    vbo.load(framebufferVertices, 16 * sizeof(float));
+    vao.linkVertexBuffer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (void*)(0));
+    vao.linkVertexBuffer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (void*)(2 * sizeof(float)));
+    ebo.load(gfx::framebufferIndices, 6 * sizeof(unsigned int));
+    vao.unBind();
+    vbo.unBind();
+    ebo.unBind();
+}
+void FrameBufferQuad::bind()
+{
+    vao.bind();
+    vbo.bind();
+    ebo.bind();
+}
+void FrameBufferQuad::unBind()
+{
+    vao.unBind();
+    vbo.unBind();
+    ebo.unBind();
+}
+void FrameBufferQuad::draw()
+{
+    glCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
 }
 
-// FrameBufferQuad::FrameBufferQuad()
-// {
-//     vao.bind();
-//     vbo.bind();
-//     ebo.bind();
-//     vbo.load(framebufferVertices, 16 * sizeof(float));
-//     vao.linkVertexBuffer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (void*)(0));
-//     vao.linkVertexBuffer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (void*)(2 * sizeof(float)));
-//     ebo.load(gfx::framebufferIndices, 6 * sizeof(unsigned int));
-//     vao.unBind();
-//     vbo.unBind();
-//     ebo.unBind();
-// }
-// void FrameBufferQuad::bind()
-// {
-//     vao.bind();
-//     vbo.bind();
-//     ebo.bind();
-// }
-// void FrameBufferQuad::unBind()
-// {
-//     vao.unBind();
-//     vbo.unBind();
-//     ebo.unBind();
-// }
-// void FrameBufferQuad::draw()
-// {
-//     glCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
-// }
-
-}
+} // namespace gfx

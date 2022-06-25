@@ -12,11 +12,7 @@ _deps
 
 /build/
 
-/assets/Main/
-/assets/bedroom/
-/assets/breakfastroom/
-/assets/spnza-obj/
-/assets/Sponza/
+/assets/
 
 # Prerequisites
 *.d

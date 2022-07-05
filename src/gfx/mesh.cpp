@@ -60,9 +60,9 @@ void Mesh::setupMesh()
     glCall(glBindVertexArray(0));
 }
 
-void Mesh::draw(ShaderProgram &shader, Material &parentMaterial, Transform &parentTransform)
+void Mesh::draw(ShaderProgram &shader, Material *parentMaterial, Transform &parentTransform)
 {
-    if (hasMaterial)
+    if (parentMaterial)
     {
         int i = 0;
         if (material.hasDiffuseMap())
@@ -96,10 +96,10 @@ void Mesh::draw(ShaderProgram &shader, Material &parentMaterial, Transform &pare
             shader.veci("material.hasNormalMap", false);
         }
     
-        shader.vec3f("material.ambient", glm::value_ptr(material.ambient * parentMaterial.ambient));
-        shader.vec3f("material.diffuse", glm::value_ptr(material.diffuse * parentMaterial.diffuse));
-        shader.vec3f("material.specular", glm::value_ptr(material.specular * parentMaterial.specular));
-        shader.vecf("material.shininess", (material.shininess + parentMaterial.shininess) / 2);
+        shader.vec3f("material.ambient", glm::value_ptr(material.ambient * parentMaterial->ambient));
+        shader.vec3f("material.diffuse", glm::value_ptr(material.diffuse * parentMaterial->diffuse));
+        shader.vec3f("material.specular", glm::value_ptr(material.specular * parentMaterial->specular));
+        shader.vecf("material.shininess", (material.shininess + parentMaterial->shininess) / 2);
     }
     shader.Mat4f("model", glm::value_ptr(parentTransform.mat4() * transform.mat4()));
     glCall(glBindVertexArray(VAO));

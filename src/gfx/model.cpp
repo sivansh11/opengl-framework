@@ -224,7 +224,7 @@ std::shared_ptr<Texture2D> Model::loadMaterialTextures(aiMaterial *mat, aiTextur
     return texture;
 }
 
-void Model::draw(ShaderProgram shader)
+void Model::draw(ShaderProgram shader, Material *material)
 {
     for (auto &mesh: meshes)
     {

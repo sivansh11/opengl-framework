@@ -66,7 +66,7 @@ public:
     ~Mesh();
 
     void load(std::vector<Vertex> &vertices, std::vector<unsigned int> &indices, Material &material);
-    void draw(ShaderProgram &shader, Material &parentMaterial, Transform &parentTransform);
+    void draw(ShaderProgram &shader, Material *parentMaterial, Transform &parentTransform);
     void free();
 
     std::vector<Vertex> vertices;
@@ -74,8 +74,6 @@ public:
 
     Material material{};
     Transform transform{};
-
-    bool hasMaterial = true;
 
 private:
     void setupMesh();

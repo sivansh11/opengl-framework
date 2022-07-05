@@ -28,7 +28,7 @@ public:
     
     void loadModelFromPath(std::string filePath);
     void free();
-    void draw(ShaderProgram shader);
+    void draw(ShaderProgram shader, Material *material);
 
     std::vector<Mesh>& getMeshes() { return meshes; }
 
